@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Tank Buddy - Dive SAC Calc</title>
+  
+  <link rel="manifest" href="./manifest.json">
+  <meta name="theme-color" content="#006994">
+  <link rel="apple-touch-icon" href="./icon-192.png">
+  
+  <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20,600,0,0" />
+
+  <style>
+    @keyframes flowingWater {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    .water-bg {
+      background: linear-gradient(-45deg, #006994, #00a8cc, #20b2aa, #48d1cc);
+      background-size: 400% 400%;
+      animation: flowingWater 12s ease infinite;
+    }
+    .icon-align {
+      font-size: 16px !important;
+      margin-right: 3px;
+      vertical-align: text-bottom;
+    }
+  </style>
+</head>
+
+<body class="water-bg p-3 antialiased min-h-screen font-sans flex flex-col justify-center items-center">
+  
+  <div id="root" class="w-full max-w-md"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+
+    const AirConsumptionCalc = () => {
+      // --- State ---
+      const [isMetric, setIsMetric] = useState(true);
+      const [isAdvanced, setIsAdvanced] = useState(false);
+      const [volMode, setVolMode] = useState("preset"); 
+      const [tanks, setTanks] = useState(1);
+      const [tankVolume, setTankVolume] = useState(11.1); 
+      const [workingPressure, setWorkingPressure] = useState(3000); 
+      const [startPressure, setStartPressure] = useState(200);
+      const [endPressure, setEndPressure] = useState(50);
+      const [avgDepth, setAvgDepth] = useState(15);
+      const [diveTime, setDiveTime] = useState(45);
+      const [sacRate, setSacRate] = useState(null);
+      
+      // UI States
+      const [copied, setCopied] = useState(false);
+      const [showInfo, setShowInfo] = useState(false);
+      const [showCalc, setShowCalc] = useState(false); 
+
+      // --- Logic ---
+      const toggleUnits = () => {
+        setVolMode("preset"); 
+        if (isMetric) {
+          setIsMetric(false);
+          setTankVolume(80);
+          setWorkingPressure(3000);
+          setStartPressure(3000);
+          setEndPressure(500);
+          setAvgDepth(50);
+        } else {
+          setIsMetric(true);
+          setTankVolume(11.1); 
+          setStartPressure(200);
+          setEndPressure(50);
+          setAvgDepth(15);
+        }
+      };
+
+      const handleVolChange = (e) => {
+        const val = e.target.value;
+        if (val === "other") {
+          setVolMode("custom");
+          setTankVolume(''); 
+        } else {
+          setVolMode("preset");
+          if (isMetric) {
+            setTankVolume(Number(val));
+          } else {
+            const [v, wp] = val.split('-');
+            setTankVolume(Number(v));
+            setWorkingPressure(Number(wp));
+          }
+        }
+      };
+
+      useEffect(() => {
+        const isValidVolume = tankVolume !== '';
+        const isValidWP = isMetric || workingPressure !== '';
+
+        if (startPressure !== '' && endPressure !== '' && avgDepth !== '' && diveTime !== '' && diveTime > 0 && isValidVolume && isValidWP) {
+          let calculatedSac = 0;
+          if (isMetric) {
+            const gasConsumed = (startPressure - endPressure) * tankVolume * tanks;
+            const ambientPressure = (avgDepth / 10) + 1;
+            calculatedSac = gasConsumed / (diveTime * ambientPressure);
+          } else {
+            const tankFactor = tankVolume / workingPressure;
+            const gasConsumed = (startPressure - endPressure) * tankFactor * tanks;
+            const ambientPressure = (avgDepth / 33) + 1;
+            calculatedSac = gasConsumed / (diveTime * ambientPressure);
+          }
+          setSacRate(calculatedSac > 0 ? calculatedSac : null);
+        } else {
+          setSacRate(null);
+        }
+      }, [isMetric, tanks, tankVolume, workingPressure, startPressure, endPressure, avgDepth, diveTime]);
+
+      useEffect(() => {
+        let timer;
+        if (showInfo) {
+          timer = setTimeout(() => setShowInfo(false), 15000);
+        }
+        return () => clearTimeout(timer);
+      }, [showInfo]);
+
+      const handleCopy = (integerValue) => {
+        const triggerSuccess = () => {
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+        };
+
+        if (navigator.clipboard && window.isSecureContext) {
+            navigator.clipboard.writeText(integerValue)
+              .then(triggerSuccess)
+              .catch(err => console.error("Clipboard API failed", err));
+        } else {
+            let success = false;
+            const textArea = document.createElement("textarea");
+            textArea.value = integerValue;
+            textArea.style.position = "fixed";
+            textArea.style.left = "-9999px";
+            textArea.style.top = "0";
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            try { success = document.execCommand("copy"); } catch (err) {}
+            textArea.remove();
+            if (success) triggerSuccess();
+        }
+      };
+
+      // --- UI Variables & Error Logic ---
+      const pUnit = isMetric ? "Bar" : "PSI";
+      const dUnit = isMetric ? "m" : "ft";
+      const outUnit = isMetric ? "L/min" : "cu ft/min";
+      const stepSize = isMetric ? 10 : 100;
+      const depthWarningThreshold = isMetric ? 20 : 65;
+      const isDeepDive = avgDepth > depthWarningThreshold;
+      const isPressureError = (startPressure !== '' && endPressure !== '' && Number(endPressure) >= Number(startPressure));
+
+      const renderCalculationDetails = () => {
+        if (!showCalc || !sacRate) return null;
+        
+        let calcLine = '';
+        if (isMetric) {
+          const deltaP = startPressure - endPressure;
+          const ambientP = (avgDepth / 10) + 1;
+          calcLine = `(${deltaP}×${tankVolume}×${tanks}) ÷ (${diveTime}×${ambientP.toFixed(2)}) = ${sacRate.toFixed(2)}`;
+        } else {
+          const tf = (tankVolume / workingPressure).toFixed(2);
+          const deltaP = startPressure - endPressure;
+          const ambientP = (avgDepth / 33) + 1;
+          calcLine = `(${deltaP}×${tf}×${tanks}) ÷ (${diveTime}×${ambientP.toFixed(2)}) = ${sacRate.toFixed(2)}`;
+        }
+
+        return (
+          <div className="mt-4 w-full flex justify-center items-center">
+            <span className="text-[17px] sm:text-[19px] font-light font-mono text-gray-700 tracking-tighter whitespace-nowrap">
+              {calcLine}
+            </span>
+          </div>
+        );
+      };
+
+      const renderOutput = () => {
+        if (isPressureError) return <p className="text-red-500 font-semibold mt-3 text-center text-sm">Please fix pressure values to calculate.</p>;
+        if (!sacRate) return <p className="text-gray-500 italic mt-3 text-center text-sm">Enter dive details to calculate.</p>;
+        
+        const sacString = sacRate.toFixed(2);
+        const [intPart, decPart] = sacString.split('.');
+        
+        return (
+          <div className="mt-5 flex flex-col items-center">
+            <h3 className="text-base font-semibold text-gray-700 mb-1.5">Surface Air Consumption</h3>
+            
+            <div className="flex items-center justify-center text-3xl font-mono mt-1 w-full gap-2">
+              <button 
+                onClick={() => handleCopy(intPart)}
+                className="border-[3px] border-blue-500 rounded-2xl px-4 py-2 bg-blue-50 active:bg-blue-200 transition-colors duration-150 shadow-sm flex items-center space-x-2.5 text-blue-900"
+                title="Click to copy whole number"
+              >
+                <span className="material-symbols-rounded text-xl text-blue-700">content_copy</span>
+                <span className="leading-none">{intPart}</span>
+              </button>
+              
+              <div className="flex items-center text-gray-600 gap-1.5">
+                <span>.{decPart} <span className="text-lg">{outUnit}</span></span>
+                
+                <button 
+                  onClick={() => setShowInfo(!showInfo)}
+                  className="p-1.5 bg-gray-100 rounded-full text-gray-500 hover:text-blue-600 active:bg-blue-100 transition-colors flex items-center justify-center relative"
+                >
+                  <span className="material-symbols-rounded text-lg block">info</span>
+                  {showInfo && (
+                    <div className="absolute bottom-full right-0 mb-3 w-60 p-3 bg-gray-900/95 text-white text-xs rounded-xl shadow-2xl z-50 backdrop-blur-md border border-gray-700 font-sans normal-case tracking-normal text-left">
+                      <div className="flex justify-between items-start mb-1.5">
+                        <p className="font-bold text-blue-300">Copying Instructions</p>
+                        <button onClick={() => setShowInfo(false)} className="text-gray-400 hover:text-white transition-colors">
+                          <span className="material-symbols-rounded text-xs block">close</span>
+                        </button>
+                      </div>
+                      <p className="text-gray-200 leading-relaxed">The SAC is usually calculated without numbers after the decimal point. Please click the blue box once to copy.</p>
+                      <div className="absolute top-full right-3 -mt-[1px] border-8 border-transparent border-t-gray-900/95"></div>
+                    </div>
+                  )}
+                </button>
+              </div>
+            </div>
+            
+            <div className="h-5 mt-2 text-sm">
+               {copied && <span className="text-green-600 font-bold transition-all">Copied to clipboard! ✓</span>}
+            </div>
+            
+            <div className="mt-2">
+                <label className="inline-flex items-center text-gray-500 text-xs cursor-pointer hover:text-blue-600 transition-colors">
+                    <input type="checkbox" checked={showCalc} onChange={(e) => setShowCalc(e.target.checked)} className="form-checkbox h-3.5 w-3.5 text-blue-500 rounded border-gray-300 mr-1.5" />
+                    <span>Show math behind the scenes</span>
+                </label>
+            </div>
+            {renderCalculationDetails()}
+          </div>
+        );
+      };
+
+      return (
+        <div className="w-full flex flex-col items-center">
+          <div className="w-full p-4 bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl border border-white/50">
+            
+            <div className="flex justify-between items-center mb-3.5">
+              <div className="flex items-center space-x-2.5">
+                {/* LOGO INTEGRATION HERE */}
+                <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-inner border border-blue-200/60 flex-shrink-0 overflow-hidden">
+                  <img src="./logo.png" alt="Tank Buddy Mascot" className="w-full h-full object-cover" />
+                </div>
+                <div className="flex flex-col items-start">
+                  <h1 className="text-2xl font-black text-blue-900 tracking-tight leading-none text-left">Tank Buddy</h1>
+                  <h2 className="text-[10px] font-bold text-blue-500/80 tracking-widest uppercase mt-0.5 text-left">Dive SAC Calc</h2>
+                </div>
+              </div>
+              
+              <button 
+                onClick={toggleUnits}
+                className="px-2.5 py-1.5 bg-gray-800 text-white text-xs font-bold rounded-full shadow hover:bg-gray-700 active:bg-gray-900 transition-colors flex items-center"
+              >
+                <span className="material-symbols-rounded icon-align text-[12px]">swap_horiz</span>
+                {isMetric ? 'Imperial' : 'Metric'}
+              </button>
+            </div>
+            
+            <div className="flex justify-center mb-4 p-0.5 bg-blue-50/50 rounded-2xl border border-blue-100">
+              <label className="relative inline-flex items-center cursor-pointer group scale-95">
+                <input type="checkbox" checked={isAdvanced} onChange={(e) => setIsAdvanced(e.target.checked)} className="sr-only" />
+                <div className={`w-12 h-7 bg-gray-200 rounded-full transition-colors duration-200 ease-in-out ${isAdvanced ? 'bg-blue-600' : ''}`}></div>
+                <div className={`absolute left-0.5 top-0.5 w-6 h-6 bg-white rounded-full shadow-md transition-transform duration-200 ease-in-out ${isAdvanced ? 'translate-x-5' : ''}`}></div>
+                <span className="ml-2.5 text-base font-black text-blue-900 tracking-tight group-hover:text-blue-700 transition-colors flex items-center">
+                  <span className="material-symbols-rounded icon-align text-blue-700 text-[16px]">settings</span>
+                  Advanced Diver
+                </span>
+              </label>
+            </div>
+            
+            <div className="space-y-3.5">
+              {isAdvanced && (
+                <div className="flex space-x-2.5 p-3.5 bg-gray-50 rounded-2xl border border-gray-200 shadow-inner">
+                  <div className="flex-1">
+                    <label className="flex items-center text-[10px] font-bold text-gray-500 uppercase tracking-wide mb-1.5"><span className="material-symbols-rounded icon-align">propane</span> Tanks</label>
+                    <select value={tanks} onChange={(e) => setTanks(Number(e.target.value))} className="w-full rounded-lg border-gray-300 shadow-sm p-2 border bg-white text-gray-800 text-sm">
+                      <option value={1}>1 Tank</option><option value={2}>2 Tanks (Twin/SM)</option><option value={3}>3 Tanks</option><option value={4}>4 Tanks</option>
+                    </select>
+                  </div>
+                  <div className="flex-1">
+                    <label className="flex items-center text-[10px] font-bold text-gray-500 uppercase tracking-wide mb-1.5"><span className="material-symbols-rounded icon-align">view_in_ar</span> Vol ({isMetric ? 'Liters' : 'CuFt'})</label>
+                    <select value={volMode === 'custom' ? 'other' : (isMetric ? tankVolume : `${tankVolume}-${workingPressure}`)} onChange={handleVolChange} className={`w-full rounded-lg border-gray-300 shadow-sm p-2 border bg-white text-gray-800 ${volMode === 'custom' ? 'mb-1.5 text-xs' : 'text-sm'}`}>
+                      {isMetric ? (<><option value={10}>10 L</option><option value={11}>11 L</option><option value={11.1}>11.1 L (AL80)</option><option value={12}>12 L</option><option value={15}>15 L</option></>) : (<><option value="80-3000">AL 80 (3000psi)</option><option value="100-3442">HP 100 (3442psi)</option><option value="117-3442">HP 117 (3442psi)</option><option value="133-3442">HP 133 (3442psi)</option></>)}
+                      <option value="other">Other...</option>
+                    </select>
+                    {volMode === 'custom' && (
+                      <div className="flex space-x-1.5">
+                        <input type="number" placeholder={isMetric ? "Liters" : "Vol"} value={tankVolume} onChange={(e) => setTankVolume(e.target.value === '' ? '' : Number(e.target.value))} className="w-full rounded-lg border-gray-300 shadow-sm p-1.5 border bg-white text-gray-800 text-xs placeholder-gray-400" />
+                        {!isMetric && (<input type="number" placeholder="WP (psi)" value={workingPressure} onChange={(e) => setWorkingPressure(e.target.value === '' ? '' : Number(e.target.value))} className="w-full rounded-lg border-gray-300 shadow-sm p-1.5 border bg-white text-gray-800 text-xs placeholder-gray-400" />)}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+              
+              <div className="w-full">
+                <label className="flex items-center text-[10px] font-bold text-gray-500 uppercase tracking-wide mb-1.5"><span className="material-symbols-rounded icon-align text-emerald-600">speed</span> Start ({pUnit})</label>
+                <div className="flex items-center space-x-1.5">
+                  <button onClick={() => setStartPressure(Math.max(0, (Number(startPressure) || 0) - stepSize))} className="px-4 py-2 bg-gray-200 hover:bg-gray-300 active:bg-gray-400 text-gray-700 rounded-lg font-bold text-lg transition-colors">-{stepSize}</button>
+                  <input 
+                    type="number" 
+                    value={startPressure} 
+                    onChange={(e) => setStartPressure(e.target.value === '' ? '' : Number(e.target.value))} 
+                    className={`w-full rounded-lg shadow-sm p-2 border text-lg font-semibold text-center transition-colors ${isPressureError ? 'border-red-400 bg-red-50 text-red-900 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 bg-gray-50 text-gray-800'}`} 
+                  />
+                  <button onClick={() => setStartPressure((Number(startPressure) || 0) + stepSize)} className="px-4 py-2 bg-gray-200 hover:bg-gray-300 active:bg-gray-400 text-gray-700 rounded-lg font-bold text-lg transition-colors">+{stepSize}</button>
+                </div>
+              </div>
+              
+              <div className="w-full">
+                <label className="flex items-center text-[10px] font-bold text-gray-500 uppercase tracking-wide mb-1.5"><span className="material-symbols-rounded icon-align text-rose-600">speed</span> End ({pUnit})</label>
+                <div className="flex items-center space-x-1.5">
+                  <button onClick={() => setEndPressure(Math.max(0, (Number(endPressure) || 0) - stepSize))} className="px-4 py-2 bg-gray-200 hover:bg-gray-300 active:bg-gray-400 text-gray-700 rounded-lg font-bold text-lg transition-colors">-{stepSize}</button>
+                  <input 
+                    type="number" 
+                    value={endPressure} 
+                    onChange={(e) => setEndPressure(e.target.value === '' ? '' : Number(e.target.value))} 
+                    className={`w-full rounded-lg shadow-sm p-2 border text-lg font-semibold text-center transition-colors ${isPressureError ? 'border-red-400 bg-red-50 text-red-900 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 bg-gray-50 text-gray-800'}`} 
+                  />
+                  <button onClick={() => setEndPressure((Number(endPressure) || 0) + stepSize)} className="px-4 py-2 bg-gray-200 hover:bg-gray-300 active:bg-gray-400 text-gray-700 rounded-lg font-bold text-lg transition-colors">+{stepSize}</button>
+                </div>
+                {isPressureError && <p className="text-[10px] text-red-600 mt-1 font-semibold pl-1">⚠️ End pressure cannot be higher than Start</p>}
+              </div>
+              
+              <div className="flex space-x-3 mt-2">
+                <div className={`flex-1 p-2.5 rounded-xl border shadow-sm transition-colors ${isDeepDive ? 'bg-yellow-50 border-yellow-300' : 'bg-gray-50 border-gray-200'}`}>
+                  <label className="flex items-center text-[10px] font-bold text-gray-500 uppercase tracking-wide mb-1.5">
+                    <span className="material-symbols-rounded icon-align text-blue-500 text-[14px]">waves</span> Avg Depth ({dUnit})
+                  </label>
+                  <input 
+                    type="number" 
+                    value={avgDepth} 
+                    onChange={(e) => setAvgDepth(e.target.value === '' ? '' : Number(e.target.value))} 
+                    className={`w-full rounded-lg shadow-sm p-2 border text-lg font-semibold text-center transition-colors ${isDeepDive ? 'border-yellow-400 bg-yellow-50 text-yellow-900 focus:border-yellow-500 focus:ring-yellow-500' : 'border-gray-300 bg-white text-gray-800'}`} 
+                  />
+                  {isDeepDive && <p className="text-[9px] text-yellow-600 mt-1.5 font-bold text-center">⚠️ Deep profile</p>}
+                </div>
+
+                <div className="flex-1 p-2.5 rounded-xl border border-gray-200 bg-gray-50 shadow-sm">
+                  <label className="flex items-center text-[10px] font-bold text-gray-500 uppercase tracking-wide mb-1.5">
+                    <span className="material-symbols-rounded icon-align text-indigo-500 text-[14px]">timer</span> Time (min)
+                  </label>
+                  <input 
+                    type="number" 
+                    value={diveTime} 
+                    onChange={(e) => setDiveTime(e.target.value === '' ? '' : Number(e.target.value))} 
+                    className="w-full rounded-lg border-gray-300 shadow-sm p-2 border bg-white text-gray-800 text-lg font-semibold text-center" 
+                  />
+                </div>
+              </div>
+
+            </div>
+            <hr className="my-5 border-gray-200" />
+            {renderOutput()}
+          </div>
+          
+          <div className="mt-5 text-center px-4">
+            <p className="text-[11px] text-white/90 font-medium mb-1 tracking-wide">
+              Built by Ben Kaufman <span className="mx-1 opacity-50">•</span> Made with AI
+            </p>
+            <p className="text-[9px] text-white/70 leading-relaxed max-w-xs mx-auto">
+              Disclaimer: This tool is for informational purposes only. Always independently verify calculations and finalize dive plans before entering the water.
+            </p>
+          </div>
+
+        </div>
+      );
+    };
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<AirConsumptionCalc />);
+  </script>
+
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+          .then(reg => console.log('Service Worker registered!', reg))
+          .catch(err => console.error('Service Worker registration failed:', err));
+      });
+    }
+  </script>
+</body>
+</html>
