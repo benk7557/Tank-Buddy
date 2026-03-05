@@ -2,7 +2,7 @@
   "name": "Tank Buddy - Dive SAC Calc",
   "short_name": "Tank Buddy",
   "description": "Calculate a diver's Surface Air Consumption (SAC) rate.",
-  "start_url": "/index.html",
+  "start_url": "/",
   "display": "standalone",
   "background_color": "#006994",
   "theme_color": "#006994",
@@ -10,14 +10,12 @@
     {
       "src": "/icon-192.png",
       "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any maskable"
+      "type": "image/png"
     },
     {
       "src": "/icon-512.png",
       "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any maskable"
+      "type": "image/png"
     }
   ]
 }
