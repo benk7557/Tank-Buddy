@@ -77,6 +77,406 @@
       const [copied, setCopied] = useState(false); 
       const [showInfo, setShowInfo] = useState(false); 
       const [showCalc, setShowCalc] = useState(false); 
+      const [showShare, setShowShare] = useState(false);
+
+      // --- Logic --- 
+      const handleVolChange = (e) => { 
+        const val = e.target.value; 
+        if (val === "other") { 
+          setVolMode("custom"); 
+          setTankVolume(''); 
+        } else { 
+          setVolMode("preset"); 
+          if (isMetric) { 
+            setTankVolume(Number(val)); 
+          } else { 
+            const [v, wp] = val.split('-'); 
+            setTankVolume(Number(v)); 
+            setWorkingPressure(Number(wp)); 
+          } 
+        } 
+      }; 
+
+      useEffect(() => { 
+        const isValidVolume = tankVolume !== ''; 
+        const isValidWP = isMetric || workingPressure !== ''; 
+        if (startPressure !== '' && endPressure !== '' && avgDepth !== '' && diveTime !== '' && diveTime > 0 && isValidVolume && isValidWP) { 
+          let calculatedSac = 0; 
+          if (isMetric) { 
+            const gasConsumed = (startPressure - endPressure) * tankVolume * tanks; 
+            const ambientPressure = (avgDepth / 10) + 1; 
+            calculatedSac = gasConsumed / (diveTime * ambientPressure); 
+          } else { 
+            const tankFactor = tankVolume / workingPressure; 
+            const gasConsumed = (startPressure - endPressure) * tankFactor * tanks; 
+            const ambientPressure = (avgDepth / 33) + 1; 
+            calculatedSac = gasConsumed / (diveTime * ambientPressure); 
+          } 
+          setSacRate(calculatedSac > 0 ? calculatedSac : null); 
+        } else { 
+          setSacRate(null); 
+        } 
+      }, [isMetric, tanks, tankVolume, workingPressure, startPressure, endPressure, avgDepth, diveTime]); 
+
+      useEffect(() => { 
+        let timer; 
+        if (showInfo) { 
+          timer = setTimeout(() => setShowInfo(false), 15000); 
+        } 
+        return () => clearTimeout(timer); 
+      }, [showInfo]); 
+
+      const handleCopy = (integerValue) => { 
+        const triggerSuccess = () => { 
+          setCopied(true); 
+          setTimeout(() => setCopied(false), 2000); 
+        }; 
+        if (navigator.clipboard && window.isSecureContext) { 
+          navigator.clipboard.writeText(integerValue) 
+            .then(triggerSuccess) 
+            .catch(err => console.error("Clipboard API failed", err)); 
+        } else { 
+          let success = false; 
+          const textArea = document.createElement("textarea"); 
+          textArea.value = integerValue; 
+          textArea.style.position = "fixed"; 
+          textArea.style.left = "-9999px"; 
+          textArea.style.top = "0"; 
+          document.body.appendChild(textArea); 
+          textArea.focus(); 
+          textArea.select(); 
+          try { 
+            success = document.execCommand("copy"); 
+          } catch (err) {} 
+          textArea.remove(); 
+          if (success) triggerSuccess(); 
+        } 
+      }; 
+
+      // --- UI Variables & Error Logic --- 
+      const pUnit = isMetric ? "Bar" : "PSI"; 
+      const dUnit = isMetric ? "m" : "ft"; 
+      const outUnit = isMetric ? "L/min" : "cu ft/min"; 
+      const stepSize = isMetric ? 10 : 100; 
+      const depthWarningThreshold = isMetric ? 20 : 65; 
+      const isDeepDive = avgDepth > depthWarningThreshold; 
+      const isPressureError = (startPressure !== '' && endPressure !== '' && Number(endPressure) >= Number(startPressure)); 
+
+      const renderCalculationDetails = () => { 
+        if (!showCalc || !sacRate) return null; 
+        let calcLine = ''; 
+        if (isMetric) { 
+          const deltaP = startPressure - endPressure; 
+          const ambientP = (avgDepth / 10) + 1; 
+          calcLine = `(${deltaP}×${tankVolume}×${tanks}) ÷ (${diveTime}×${ambientP.toFixed(2)}) = ${sacRate.toFixed(2)}`; 
+        } else { 
+          const tf = (tankVolume / workingPressure).toFixed(2); 
+          const deltaP = startPressure - endPressure; 
+          const ambientP = (avgDepth / 33) + 1; 
+          calcLine = `(${deltaP}×${tf}×${tanks}) ÷ (${diveTime}×${ambientP.toFixed(2)}) = ${sacRate.toFixed(2)}`; 
+        } 
+        return ( 
+          <div className="mt-4 w-full flex justify-center items-center"> 
+            <span className="text-[17px] sm:text-[19px] font-light font-mono text-gray-700 tracking-tighter whitespace-nowrap"> 
+              {calcLine} 
+            </span> 
+          </div> 
+        ); 
+      }; 
+
+      const renderOutput = () => { 
+        if (isPressureError) return <p className="text-red-500 font-semibold mt-3 text-center text-sm">Please fix pressure values to calculate.</p>; 
+        if (!sacRate) return <p className="text-gray-500 italic mt-3 text-center text-sm">Enter dive details to calculate.</p>; 
+        const sacString = sacRate.toFixed(2); 
+        const [intPart, decPart] = sacString.split('.'); 
+        
+        return ( 
+          <div className="mt-5 flex flex-col items-center"> 
+            <h3 className="text-base font-semibold text-gray-700 mb-1.5">Surface Air Consumption</h3> 
+            <div className="flex items-center justify-center font-mono mt-1 w-full gap-2.5"> 
+              
+              {/* GREEN COPY BUTTON */}
+              <button 
+                onClick={() => handleCopy(intPart)} 
+                className="border-[3px] border-green-500 rounded-2xl px-5 py-2.5 bg-green-50 hover:bg-green-100 active:bg-green-200 transition-colors duration-150 shadow-sm flex items-center space-x-2 text-green-900" 
+                title="Click to copy whole number" 
+              > 
+                <span className="material-symbols-rounded text-[22px] text-green-600">content_copy</span> 
+                <span className="leading-none text-4xl font-black">{intPart}</span> 
+              </button> 
+              
+              {/* SMALLER DECIMALS */}
+              <div className="flex items-center text-gray-400 gap-1.5"> 
+                <span className="text-xl font-bold">.{decPart} <span className="text-sm font-medium text-gray-500 ml-0.5">{outUnit}</span></span> 
+                
+                <button onClick={() => setShowInfo(!showInfo)} className="p-1.5 bg-gray-100 rounded-full text-gray-400 hover:text-green-600 active:bg-green-100 transition-colors flex items-center justify-center relative" > 
+                  <span className="material-symbols-rounded text-lg block">info</span> 
+                  {showInfo && ( 
+                    <div className="absolute bottom-full right-0 mb-3 w-60 p-3 bg-gray-900/95 text-white text-xs rounded-xl shadow-2xl z-50 backdrop-blur-md border border-gray-700 font-sans normal-case tracking-normal text-left"> 
+                      <div className="flex justify-between items-start mb-1.5"> 
+                        <p className="font-bold text-green-400">Copying Instructions</p> 
+                        <button onClick={() => setShowInfo(false)} className="text-gray-400 hover:text-white transition-colors"> 
+                          <span className="material-symbols-rounded text-xs block">close</span> 
+                        </button> 
+                      </div> 
+                      <p className="text-gray-200 leading-relaxed">The SAC is usually calculated without numbers after the decimal point. Please click the green box once to copy.</p> 
+                      <div className="absolute top-full right-3 -mt-[1px] border-8 border-transparent border-t-gray-900/95"></div> 
+                    </div> 
+                  )} 
+                </button> 
+              </div> 
+            </div> 
+            
+            <div className="h-5 mt-2 text-sm"> 
+              {copied && <span className="text-green-600 font-bold transition-all">Copied to clipboard! ✓</span>} 
+            </div> 
+            <div className="mt-2"> 
+              <label className="inline-flex items-center text-gray-500 text-xs cursor-pointer hover:text-green-600 transition-colors"> 
+                <input type="checkbox" checked={showCalc} onChange={(e) => setShowCalc(e.target.checked)} className="form-checkbox h-3.5 w-3.5 text-green-500 rounded border-gray-300 mr-1.5" /> 
+                <span>Show math behind the scenes</span> 
+              </label> 
+            </div> 
+            {renderCalculationDetails()} 
+          </div> 
+        ); 
+      }; 
+
+      return ( 
+        <div className="w-full flex flex-col items-center"> 
+          <div className="w-full p-4 bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl border border-white/50"> 
+            
+            <div className="flex justify-between items-center mb-3.5"> 
+              <div className="flex items-center space-x-2.5"> 
+                <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-inner border border-blue-200/60 flex-shrink-0 overflow-hidden"> 
+                  <img src="/logo.png" alt="Tank Buddy Mascot" className="w-full h-full object-cover" /> 
+                </div> 
+                <div className="flex flex-col items-start"> 
+                  <h1 className="text-2xl font-black text-blue-900 tracking-tight leading-none text-left">Tank Buddy</h1> 
+                  <h2 className="text-[10px] font-bold text-blue-500/80 tracking-widest uppercase mt-0.5 text-left">Dive SAC Calc</h2> 
+                </div> 
+              </div> 
+              
+              <button 
+                onClick={() => setShowShare(true)} 
+                className="px-3 py-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 text-xs font-bold rounded-full shadow-sm active:scale-95 transition-all flex items-center gap-1.5"
+              >
+                <span className="material-symbols-rounded text-[16px]">share</span>
+                Share
+              </button>
+            </div> 
+            
+            <div className="flex justify-center mb-4 p-0.5 bg-blue-50/50 rounded-2xl border border-blue-100"> 
+              <label className="relative inline-flex items-center cursor-pointer group scale-95"> 
+                <input type="checkbox" checked={isAdvanced} onChange={(e) => setIsAdvanced(e.target.checked)} className="sr-only" /> 
+                <div className={`w-12 h-7 bg-gray-200 rounded-full transition-colors duration-200 ease-in-out ${isAdvanced ? 'bg-blue-600' : ''}`}></div> 
+                <div className={`absolute left-0.5 top-0.5 w-6 h-6 bg-white rounded-full shadow-md transition-transform duration-200 ease-in-out ${isAdvanced ? 'translate-x-5' : ''}`}></div> 
+                <span className="ml-2.5 text-base font-black text-blue-900 tracking-tight group-hover:text-blue-700 transition-colors flex items-center"> 
+                  <span className="material-symbols-rounded icon-align text-blue-700 text-[16px]">settings</span> Advanced Diver 
+                </span> 
+              </label> 
+            </div> 
+            
+            <div className="space-y-3.5"> 
+              {isAdvanced && ( 
+                <div className="flex space-x-2.5 p-3.5 bg-gray-50 rounded-2xl border border-gray-200 shadow-inner"> 
+                  <div className="flex-1"> 
+                    <label className="flex items-center text-[10px] font-bold text-gray-500 uppercase tracking-wide mb-1.5"><span className="material-symbols-rounded icon-align">propane</span> Tanks</label> 
+                    <select value={tanks} onChange={(e) => setTanks(Number(e.target.value))} className="w-full rounded-lg border-gray-300 shadow-sm p-2 border bg-white text-gray-800 text-sm"> 
+                      <option value={1}>1 Tank</option>
+                      <option value={2}>2 Tanks (Twin/SM)</option>
+                      <option value={3}>3 Tanks</option>
+                      <option value={4}>4 Tanks</option> 
+                    </select> 
+                  </div> 
+                  <div className="flex-1"> 
+                    <label className="flex items-center text-[10px] font-bold text-gray-500 uppercase tracking-wide mb-1.5"><span className="material-symbols-rounded icon-align">view_in_ar</span> Vol ({isMetric ? 'Liters' : 'CuFt'})</label> 
+                    <select value={volMode === 'custom' ? 'other' : (isMetric ? tankVolume : `${tankVolume}-${workingPressure}`)} onChange={handleVolChange} className={`w-full rounded-lg border-gray-300 shadow-sm p-2 border bg-white text-gray-800 ${volMode === 'custom' ? 'mb-1.5 text-xs' : 'text-sm'}`}> 
+                      {isMetric ? (
+                        <><option value={10}>10 L</option><option value={11}>11 L</option><option value={11.1}>11.1 L (AL80)</option><option value={12}>12 L</option><option value={15}>15 L</option></>
+                      ) : (
+                        <><option value="80-3000">AL 80 (3000psi)</option><option value="100-3442">HP 100 (3442psi)</option><option value="117-3442">HP 117 (3442psi)</option><option value="133-3442">HP 133 (3442psi)</option></>
+                      )} 
+                      <option value="other">Other...</option> 
+                    </select> 
+                    {volMode === 'custom' && ( 
+                      <div className="flex space-x-1.5"> 
+                        <input type="number" placeholder={isMetric ? "Liters" : "Vol"} value={tankVolume} onChange={(e) => setTankVolume(e.target.value === '' ? '' : Number(e.target.value))} className="w-full rounded-lg border-gray-300 shadow-sm p-1.5 border bg-white text-gray-800 text-xs placeholder-gray-400" /> 
+                        {!isMetric && (
+                          <input type="number" placeholder="WP (psi)" value={workingPressure} onChange={(e) => setWorkingPressure(e.target.value === '' ? '' : Number(e.target.value))} className="w-full rounded-lg border-gray-300 shadow-sm p-1.5 border bg-white text-gray-800 text-xs placeholder-gray-400" />
+                        )} 
+                      </div> 
+                    )} 
+                  </div> 
+                </div> 
+              )} 
+              
+              {/* BIGGER STEPPER BUTTONS FOR START PRESSURE */}
+              <div className="w-full"> 
+                <label className="flex items-center text-[10px] font-bold text-gray-500 uppercase tracking-wide mb-1.5"><span className="material-symbols-rounded icon-align text-emerald-600">speed</span> Start ({pUnit})</label> 
+                <div className="flex items-center space-x-1.5"> 
+                  <button onClick={() => setStartPressure(Math.max(0, (Number(startPressure) || 0) - stepSize))} className="px-5 py-3 bg-gray-200 hover:bg-gray-300 active:bg-gray-400 text-gray-700 rounded-xl font-black text-xl transition-all shadow-sm">-{stepSize}</button> 
+                  <input type="number" value={startPressure} onChange={(e) => setStartPressure(e.target.value === '' ? '' : Number(e.target.value))} className={`w-full rounded-lg shadow-sm p-2 border text-xl font-semibold text-center transition-colors ${isPressureError ? 'border-red-400 bg-red-50 text-red-900 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 bg-gray-50 text-gray-800'}`} /> 
+                  <button onClick={() => setStartPressure((Number(startPressure) || 0) + stepSize)} className="px-5 py-3 bg-gray-200 hover:bg-gray-300 active:bg-gray-400 text-gray-700 rounded-xl font-black text-xl transition-all shadow-sm">+{stepSize}</button> 
+                </div> 
+              </div> 
+              
+              {/* BIGGER STEPPER BUTTONS FOR END PRESSURE */}
+              <div className="w-full"> 
+                <label className="flex items-center text-[10px] font-bold text-gray-500 uppercase tracking-wide mb-1.5"><span className="material-symbols-rounded icon-align text-rose-600">speed</span> End ({pUnit})</label> 
+                <div className="flex items-center space-x-1.5"> 
+                  <button onClick={() => setEndPressure(Math.max(0, (Number(endPressure) || 0) - stepSize))} className="px-5 py-3 bg-gray-200 hover:bg-gray-300 active:bg-gray-400 text-gray-700 rounded-xl font-black text-xl transition-all shadow-sm">-{stepSize}</button> 
+                  <input type="number" value={endPressure} onChange={(e) => setEndPressure(e.target.value === '' ? '' : Number(e.target.value))} className={`w-full rounded-lg shadow-sm p-2 border text-xl font-semibold text-center transition-colors ${isPressureError ? 'border-red-400 bg-red-50 text-red-900 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 bg-gray-50 text-gray-800'}`} /> 
+                  <button onClick={() => setEndPressure((Number(endPressure) || 0) + stepSize)} className="px-5 py-3 bg-gray-200 hover:bg-gray-300 active:bg-gray-400 text-gray-700 rounded-xl font-black text-xl transition-all shadow-sm">+{stepSize}</button> 
+                </div> 
+                {isPressureError && <p className="text-[10px] text-red-600 mt-1 font-semibold pl-1">⚠️ End pressure cannot be higher than Start</p>} 
+              </div> 
+              
+              <div className="flex space-x-3 mt-2"> 
+                <div className={`flex-1 p-2.5 rounded-xl border shadow-sm transition-colors ${isDeepDive ? 'bg-yellow-50 border-yellow-300' : 'bg-gray-50 border-gray-200'}`}> 
+                  <label className="flex items-center text-[10px] font-bold text-gray-500 uppercase tracking-wide mb-1.5"> 
+                    <span className="material-symbols-rounded icon-align text-blue-500 text-[14px]">waves</span> Avg Depth ({dUnit}) 
+                  </label> 
+                  <input type="number" value={avgDepth} onChange={(e) => setAvgDepth(e.target.value === '' ? '' : Number(e.target.value))} className={`w-full rounded-lg shadow-sm p-2 border text-lg font-semibold text-center transition-colors ${isDeepDive ? 'border-yellow-400 bg-yellow-50 text-yellow-900 focus:border-yellow-500 focus:ring-yellow-500' : 'border-gray-300 bg-white text-gray-800'}`} /> 
+                  {isDeepDive && <p className="text-[9px] text-yellow-600 mt-1.5 font-bold text-center">⚠️ Deep profile</p>} 
+                </div> 
+                <div className="flex-1 p-2.5 rounded-xl border border-gray-200 bg-gray-50 shadow-sm"> 
+                  <label className="flex items-center text-[10px] font-bold text-gray-500 uppercase tracking-wide mb-1.5"> 
+                    <span className="material-symbols-rounded icon-align text-indigo-500 text-[14px]">timer</span> Time (min) 
+                  </label> 
+                  <input type="number" value={diveTime} onChange={(e) => setDiveTime(e.target.value === '' ? '' : Number(e.target.value))} className="w-full rounded-lg border-gray-300 shadow-sm p-2 border bg-white text-gray-800 text-lg font-semibold text-center" /> 
+                </div> 
+              </div> 
+            </div> 
+            
+            <hr className="my-5 border-gray-200" /> 
+            {renderOutput()} 
+          </div> 
+          
+          <SupportFooter />
+
+          <div className="mt-5 text-center px-4"> 
+            <p className="text-[11px] text-white/90 font-medium mb-1 tracking-wide"> 
+              Built by Ben Kaufman <span className="mx-1 opacity-50">•</span> Made with AI 
+            </p> 
+            <p className="text-[9px] text-white/70 leading-relaxed max-w-xs mx-auto"> 
+              Disclaimer: This tool is for informational purposes only. Always independently verify calculations and finalize dive plans before entering the water. 
+            </p> 
+          </div> 
+
+          {/* --- THE UNIVERSAL SHARE MODAL --- */}
+          {showShare && (
+            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+              <div className="w-full max-w-xs bg-white rounded-3xl p-6 flex flex-col items-center shadow-2xl animate-in fade-in zoom-in duration-200">
+                
+                <div className="w-full flex justify-between items-start mb-2">
+                  <div className="flex flex-col">
+                    <h3 className="text-xl font-black text-blue-900 leading-none">Buddy-Up</h3>
+                    <p className="text-[10px] text-blue-500 font-bold uppercase tracking-widest mt-1">Share Tank Buddy</p>
+                  </div>
+                  <button 
+                    onClick={() => setShowShare(false)} 
+                    className="p-1 text-gray-400 hover:text-gray-700 bg-gray-100 rounded-full active:scale-95 transition-all"
+                  >
+                    <span className="material-symbols-rounded text-[18px] block">close</span>
+                  </button>
+                </div>
+
+                <div className="bg-white p-2 rounded-xl border border-gray-200 shadow-sm mb-6 mt-4 w-48 h-48 flex items-center justify-center">
+                  <img 
+                    src="data:image/png;base64,IVBORw0KGgoAAAANSUhEUgAAAMgAAADIAQMAAACXljzdAAAABlBMVEX///8AAABVwtN+AAAACXBIWXMAAA7EAAAOxAGVKw4bAAAA/klEQVRYhd2XwQ6DQAhEhy/fP4fKAGs18e6IddvwLiXAwAKPtoJ2/AqEH19WDn834X8PPul0SwzTJRlnkHs6zK24NuGZno+Q/FSc6qQrkcEGk3erUS3SSpHP5O2qIVpkW+JDK/48kmRVnDxsWovyp0lQXcXDu7kAXbLojJaK2GLuogQ9l/LtruL+oEoWem+oenTr4+WkMsMMcfrg7CxJUnGitoMJcypRkXSkGL1m75gwacUuQWADUfg0yTlOgd52buNWi3Celkqky/aGrUoqztK/HakJk4jRir2LdqTaJG2k7xPkvPxcb65ipCqRmBmzvtWJklGKai/MhU6VPNoPOKTg5PPeJlgAAAAASUVORK5CYII=" 
+                    alt="Tank Buddy QR Code" 
+                    className="w-full h-full"
+                  />
+                </div>
+
+                <button 
+                  onClick={async () => {
+                    if (navigator.share) {
+                      try {
+                        await navigator.share({ 
+                          title: 'Tank Buddy', 
+                          text: 'Calculate your dive SAC rate offline.', 
+                          url: 'https://tankbuddy.net' 
+                        });
+                      } catch (err) {
+                        console.log("Share cancelled");
+                      }
+                    } else {
+                      alert("Native sharing isn't supported on this browser. Have your buddy scan the QR code instead!");
+                    }
+                  }}
+                  className="w-full py-3.5 bg-blue-600 text-white rounded-xl font-bold flex items-center justify-center gap-2 shadow-md hover:bg-blue-700 active:scale-95 transition-all"
+                >
+                  <span className="material-symbols-rounded text-[20px]">send</span>
+                  Send Link
+                </button>
+
+              </div>
+            </div>
+          )}
+          {/* --- END MODAL --- */}
+
+        </div> 
+      ); 
+    }; 
+    
+    const root = ReactDOM.createRoot(document.getElementById('root')); 
+    root.render(<AirConsumptionCalc />); 
+  </script> 
+  <script> 
+    if ('serviceWorker' in navigator) { 
+      window.addEventListener('load', () => { 
+        navigator.serviceWorker.register('/sw.js') 
+          .then(reg => console.log('Service Worker registered!', reg)) 
+          .catch(err => console.error('Service Worker registration failed:', err)); 
+      }); 
+    } 
+  </script> 
+</body> 
+</html>
+    } 
+  </style> 
+</head> 
+<body class="water-bg p-3 antialiased min-h-screen font-sans flex flex-col justify-center items-center"> 
+  <div id="root" class="w-full max-w-md"></div> 
+  <script type="text/babel"> 
+    const { useState, useEffect } = React; 
+
+    // --- KO-FI BUTTON COMPONENT ---
+    const SupportFooter = () => {
+      return (
+        <div className="mt-8 mb-2 flex justify-center w-full">
+          <a 
+            href="https://ko-fi.com/kaufman" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="flex items-center gap-2 px-6 py-3 bg-amber-400 text-yellow-900 font-bold rounded-full shadow-lg hover:bg-amber-300 hover:shadow-xl active:scale-95 transition-all border border-amber-300 backdrop-blur-sm"
+          >
+            <span className="material-symbols-rounded">sports_bar</span>
+            Buy me a post-dive beer
+          </a>
+        </div>
+      );
+    };
+
+    const AirConsumptionCalc = () => { 
+      // --- State --- 
+      const [isMetric, setIsMetric] = useState(true); 
+      const [isAdvanced, setIsAdvanced] = useState(false); 
+      const [volMode, setVolMode] = useState("preset"); 
+      const [tanks, setTanks] = useState(1); 
+      const [tankVolume, setTankVolume] = useState(11.1); 
+      const [workingPressure, setWorkingPressure] = useState(3000); 
+      const [startPressure, setStartPressure] = useState(200); 
+      const [endPressure, setEndPressure] = useState(50); 
+      const [avgDepth, setAvgDepth] = useState(15); 
+      const [diveTime, setDiveTime] = useState(45); 
+      const [sacRate, setSacRate] = useState(null); 
+      
+      // UI States 
+      const [copied, setCopied] = useState(false); 
+      const [showInfo, setShowInfo] = useState(false); 
+      const [showCalc, setShowCalc] = useState(false); 
       const [showShare, setShowShare] = useState(false); // New Share State
 
       // --- Logic --- 
