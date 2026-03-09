@@ -42,15 +42,27 @@
   <script type="text/babel"> 
     const { useState, useEffect } = React; 
 
-    // --- KO-FI BUTTON COMPONENT ---
+    // --- SUPPORT FOOTER COMPONENT ---
     const SupportFooter = () => {
       return (
-        <div className="mt-8 mb-2 flex justify-center w-full">
+        <div className="mt-16 mb-6 flex flex-col items-center gap-4 w-full">
+          {/* GitHub Button */}
+          <a 
+            href="https://github.com/benk7557/Tank-Buddy" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="flex items-center justify-center gap-2 px-6 py-3 bg-slate-800 text-white font-bold rounded-full shadow-lg hover:bg-slate-700 hover:shadow-xl active:scale-95 transition-all border border-slate-600 backdrop-blur-sm w-64"
+          >
+            <span className="material-symbols-rounded">code</span>
+            View on GitHub
+          </a>
+
+          {/* Beer Button */}
           <a 
             href="https://ko-fi.com/kaufman" 
             target="_blank" 
             rel="noopener noreferrer"
-            className="flex items-center gap-2 px-6 py-3 bg-amber-400 text-yellow-900 font-bold rounded-full shadow-lg hover:bg-amber-300 hover:shadow-xl active:scale-95 transition-all border border-amber-300 backdrop-blur-sm"
+            className="flex items-center justify-center gap-2 px-6 py-3 bg-amber-400 text-yellow-900 font-bold rounded-full shadow-lg hover:bg-amber-300 hover:shadow-xl active:scale-95 transition-all border border-amber-300 backdrop-blur-sm w-64"
           >
             <span className="material-symbols-rounded">sports_bar</span>
             Buy me a post-dive beer
@@ -245,20 +257,21 @@
         <div className="w-full flex flex-col items-center"> 
           <div className="w-full p-4 bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl border border-white/50"> 
             
-            <div className="flex justify-between items-center mb-3.5"> 
-              <div className="flex items-center space-x-2.5"> 
-                <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-inner border border-blue-200/60 flex-shrink-0 overflow-hidden"> 
+            {/* ENLARGED MASCOT & SPACED HEADER */}
+            <div className="flex justify-between items-start mb-8"> 
+              <div className="flex items-center space-x-3.5"> 
+                <div className="w-20 h-20 bg-white rounded-2xl flex items-center justify-center shadow-inner border border-blue-200/60 flex-shrink-0 overflow-hidden"> 
                   <img src="/logo.png" alt="Tank Buddy Mascot" className="w-full h-full object-cover" /> 
                 </div> 
-                <div className="flex flex-col items-start"> 
-                  <h1 className="text-2xl font-black text-blue-900 tracking-tight leading-none text-left">Tank Buddy</h1> 
-                  <h2 className="text-[10px] font-bold text-blue-500/80 tracking-widest uppercase mt-0.5 text-left">Dive SAC Calc</h2> 
+                <div className="flex flex-col items-start mt-1"> 
+                  <h1 className="text-3xl font-black text-blue-900 tracking-tight leading-none text-left">Tank Buddy</h1> 
+                  <h2 className="text-[11px] font-bold text-blue-500/80 tracking-widest uppercase mt-1.5 text-left">Dive SAC Calc</h2> 
                 </div> 
               </div> 
               
               <button 
                 onClick={() => setShowShare(true)} 
-                className="px-3 py-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 text-xs font-bold rounded-full shadow-sm active:scale-95 transition-all flex items-center gap-1.5"
+                className="px-3 py-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 text-xs font-bold rounded-full shadow-sm active:scale-95 transition-all flex items-center gap-1.5 mt-1"
               >
                 <span className="material-symbols-rounded text-[16px]">share</span>
                 Share
@@ -352,6 +365,7 @@
             {renderOutput()} 
           </div> 
           
+          {/* THE NEW SHIFTED FOOTER */}
           <SupportFooter />
 
           <div className="mt-5 text-center px-4"> 
