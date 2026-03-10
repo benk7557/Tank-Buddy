@@ -419,12 +419,10 @@
 
                 {/* --- ✨ FIXED: INLINE SVG QR CODE ✅ ✨ --- */}
                 {/* No corridors, no corrupt data. Just readable SVG text injected directly. */}
-                <div className="bg-white rounded-xl border border-gray-200 shadow-sm mb-6 mt-4 w-48 h-48 flex items-center justify-center overflow-hidden p-3 animate-in fade-in duration-500 delay-150">
-                  <div 
-                    className="w-full h-full flex items-center justify-center"
-                    dangerouslySetInnerHTML={{ __html: TANK_BUDDY_QR_SVG }}
-                  />
+                <div className="bg-white rounded-xl border border-gray-200 shadow-sm mb-6 mt-4 w-48 h-48 flex items-center justify-center overflow-hidden p-3 animate-in fade-in duration-500 
+                  <img src="/qr.png" alt="Tank Buddy QR Code" className="w-full h-full object-contain" />
                 </div>
+
 
                 <button 
                   onClick={async () => {
