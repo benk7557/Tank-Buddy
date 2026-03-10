@@ -1,3 +1,4 @@
+self.skipWaiting();
 const CACHE_NAME = 'tank-buddy-v2.4';
 const ASSETS_TO_CACHE = [
   '/',
