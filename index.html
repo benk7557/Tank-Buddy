@@ -6,7 +6,7 @@
   
   <title>Tank Buddy - Easy to Use Dive SAC Calc</title> 
   <meta name="description" content="An easy to use, lightning-fast, offline-first SAC calculator for scuba divers. Plan your gas consumption instantly on the dive boat.">
-  <meta name="keywords" content="scuba diving, SAC calculator, gas planning, dive safety, PWA, easy surface air consumption tool, offline dive app">
+  <meta name="keywords" content="scuba diving, SAC calculator, gas planning, dive safety, PWA, easy surface air consumption tool, offline dive app, benk7557, thailand diving">
   
   <link rel="manifest" href="/manifest.json"> 
   <meta name="theme-color" content="#006994"> 
@@ -23,7 +23,7 @@
     "@context": "https://schema.org",
     "@type": "SoftwareApplication",
     "name": "Tank Buddy",
-    "operatingSystem": "Any",
+    "operatingSystem": "Web, Android, iOS",
     "applicationCategory": "SportsApplication",
     "description": "An easy to use, offline-first Surface Air Consumption (SAC) calculator for scuba divers.",
     "offers": {
@@ -62,6 +62,7 @@
   <script type="text/babel"> 
     const { useState, useEffect } = React; 
 
+    // --- SUPPORT FOOTER COMPONENT ---
     const SupportFooter = () => {
       return (
         <div className="mt-16 mb-6 flex flex-col items-center gap-4 w-full">
@@ -89,6 +90,7 @@
     };
 
     const AirConsumptionCalc = () => { 
+      // --- State --- 
       const [isMetric, setIsMetric] = useState(true); 
       const [isAdvanced, setIsAdvanced] = useState(false); 
       const [volMode, setVolMode] = useState("preset"); 
@@ -106,6 +108,7 @@
       const [showCalc, setShowCalc] = useState(false); 
       const [showShare, setShowShare] = useState(false);
 
+      // --- Logic --- 
       const handleVolChange = (e) => { 
         const val = e.target.value; 
         if (val === "other") { 
@@ -220,6 +223,7 @@
             <h3 className="text-base font-semibold text-gray-700 mb-1.5">Surface Air Consumption</h3> 
             <div className="flex items-center justify-center font-mono mt-1 w-full gap-2.5"> 
               
+              {/* GREEN COPY BUTTON */}
               <button 
                 onClick={() => handleCopy(intPart)} 
                 className="border-[3px] border-green-500 rounded-2xl px-5 py-2.5 bg-green-50 hover:bg-green-100 active:bg-green-200 transition-colors duration-150 shadow-sm flex items-center space-x-2 text-green-900" 
@@ -229,6 +233,7 @@
                 <span className="leading-none text-4xl font-black">{intPart}</span> 
               </button> 
               
+              {/* SMALLER DECIMALS */}
               <div className="flex items-center text-gray-400 gap-1.5"> 
                 <span className="text-xl font-bold">.{decPart} <span className="text-sm font-medium text-gray-500 ml-0.5">{outUnit}</span></span> 
                 
@@ -268,6 +273,7 @@
         <div className="w-full flex flex-col items-center"> 
           <div className="w-full p-4 bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl border border-white/50"> 
             
+            {/* ENLARGED MASCOT & SPACED HEADER */}
             <div className="flex justify-between items-start mb-8"> 
               <div className="flex items-center space-x-3.5"> 
                 <div className="w-20 h-20 bg-white rounded-2xl flex items-center justify-center shadow-inner border border-blue-200/60 flex-shrink-0 overflow-hidden"> 
@@ -333,6 +339,7 @@
                 </div> 
               )} 
               
+              {/* BIGGER STEPPER BUTTONS */}
               <div className="w-full"> 
                 <label className="flex items-center text-[10px] font-bold text-gray-500 uppercase tracking-wide mb-1.5"><span className="material-symbols-rounded icon-align text-emerald-600">speed</span> Start ({pUnit})</label> 
                 <div className="flex items-center space-x-1.5"> 
@@ -377,15 +384,16 @@
 
           <div className="mt-5 text-center px-4"> 
             <p className="text-[11px] text-white/90 font-medium mb-1 tracking-wide"> 
-              Built by Ben Kaufman v2.1 <span className="mx-1 opacity-50">•</span> Made with AI 
+              Built by Ben Kaufman <span className="mx-1 opacity-50">•</span> Made with AI 
             </p> 
             <p className="text-[9px] text-white/70 leading-relaxed max-w-xs mx-auto"> 
               Disclaimer: This tool is for informational purposes only. Always independently verify calculations and finalize dive plans before entering the water. 
             </p> 
           </div> 
 
+          {/* --- THE UNIVERSAL SHARE MODAL (WITH IMAGE FIX) --- */}
           {showShare && (
-            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300">
               <div className="w-full max-w-xs bg-white rounded-3xl p-6 flex flex-col items-center shadow-2xl animate-in fade-in zoom-in duration-200">
                 
                 <div className="w-full flex justify-between items-start mb-2">
@@ -401,12 +409,8 @@
                   </button>
                 </div>
 
-                <div className="bg-white p-2 rounded-xl border border-gray-200 shadow-sm mb-6 mt-4 w-48 h-48 flex items-center justify-center overflow-hidden">
-                  <img 
-                    src="data:image/png;base64,IVBORw0KGgoAAAANSUhEUgAAAMgAAADIAQMAAACXljzdAAAABlBMVEX///8AAABVwtN+AAAACXBIWXMAAA7EAAAOxAGVKw4bAAAA/klEQVRYhd2XwQ6DQAhEhy/fP4fKAGs18e6IddvwLiXAwAKPtoJ2/AqEH19WDn834X8PPul0SwzTJRlnkHs6zK24NuGZno+Q/FSc6qQrkcEGk3erUS3SSpHP5O2qIVpkW+JDK/48kmRVnDxsWovyp0lQXcXDu7kAXbLojJaK2GLuogQ9l/LtruL+oEoWem+oenTr4+WkMsMMcfrg7CxJUnGitoMJcypRkXSkGL1m75gwacUuQWADUfg0yTlOgd52buNWi3Celkqky/aGrUoqztK/HakJk4jRir2LdqTaJG2k7xPkvPxcb65ipCqRmBmzvtWJklGKai/MhU6VPNoPOKTg5PPeJlgAAAAASUVORK5CYII=" 
-                    alt="Tank Buddy QR Code" 
-                    className="w-full h-full object-contain"
-                  />
+                <div className="bg-white rounded-xl border border-gray-200 shadow-sm mb-6 mt-4 w-48 h-48 flex items-center justify-center overflow-hidden p-3 animate-in fade-in duration-500 delay-150">
+                  <img src="/qr.png" alt="Tank Buddy QR Code" className="w-full h-full object-contain" />
                 </div>
 
                 <button 
@@ -448,14 +452,11 @@
         navigator.serviceWorker.register('/sw.js') 
           .then(reg => {
             console.log('Service Worker registered!', reg);
-            
-            // Listen for a new SW being installed
             reg.addEventListener('updatefound', () => {
               const newWorker = reg.installing;
               newWorker.addEventListener('statechange', () => {
                 if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                  // A new version is available! Let's force it to take over if we can.
-                  // (Note: To be fully atomic, your sw.js should ideally also contain self.skipWaiting() in the install event)
+                  console.log('New SW version found! Forcing activation...');
                   newWorker.postMessage({ type: 'SKIP_WAITING' });
                 }
               });
@@ -463,11 +464,11 @@
           }) 
           .catch(err => console.error('Service Worker registration failed:', err)); 
           
-        // Listen for the SW taking control, and transparently reload the page
         let refreshing = false;
         navigator.serviceWorker.addEventListener('controllerchange', () => {
           if (!refreshing) {
             refreshing = true;
+            console.log('New SW activated! Refreshing page...');
             window.location.reload();
           }
         });
