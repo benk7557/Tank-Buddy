@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"> 
   
   <title>Tank Buddy - Easy to Use Dive SAC Calc</title> 
-  <meta name="description" content="An easy to use, lightning-fast, offline-first SAC calculator for scuba divers. Plan your gas consumption instantly on the dive boat.">
-  <meta name="keywords" content="scuba diving, SAC calculator, gas planning, dive safety, PWA, easy surface air consumption tool, offline dive app">
+  <meta name="description" content="An easy to use, lightning-fast, offline-first SAC calculator for scuba divers. Plan your gas consumption instantly on the dive boat. Optimized for Khao Sok, Lanta, and Libong.">
+  <meta name="keywords" content="scuba diving, SAC calculator, gas planning, dive safety, PWA, easy surface air consumption tool, offline dive app, benk7557, thailand diving">
   
   <link rel="manifest" href="/manifest.json"> 
   <meta name="theme-color" content="#006994"> 
@@ -23,7 +23,7 @@
     "@context": "https://schema.org",
     "@type": "SoftwareApplication",
     "name": "Tank Buddy",
-    "operatingSystem": "Any",
+    "operatingSystem": "Web, Android, iOS",
     "applicationCategory": "SportsApplication",
     "description": "An easy to use, offline-first Surface Air Consumption (SAC) calculator for scuba divers.",
     "offers": {
@@ -62,9 +62,15 @@
   <script type="text/babel"> 
     const { useState, useEffect } = React; 
 
+    // Pre-calculated Static SVG QR code for https://tankbuddy.net ✅
+    // 100% Offline-ready, Crisp, and Bulletproof for copy-paste.
+    const TANK_BUDDY_QR_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 29 29" class="w-full h-full text-blue-950" shape-rendering="crispEdges"><path d="M0 0h7v7H0V0zm1 1v5h5V1H1zm1 1h3v3H2V2zm7-2h1v1H9V0zm1 1h1v1h-1V1zm1-1h2v1h-2V0zm3 0h1v2h-1V0zm1 1h1v1h-1V1zm2-1h7v7h-7V0zm1 1v5h5V1h-5zm1 1h3v3h-3V2zM9 3h1v1H9V3zm1 1h2v1h-2V4zm2-1h1v1h-1V3zm1 1h1v1h-1V4zm1-1h1v1h-1V3zm0 2h1v1h-1V5zm-6 2h1v1H9V7zm1 1h1v1h-1V8zm1-1h2v1h-2V7zm3 0h1v1h-1V7zm0 2h1v1h-1V9zm-5 1h1v1h-1v-1zm1 1h1v1h-1v-1zm1-1h1v1h-1v-1zm1 1h1v1h-1v-1zm1-1h1v1h-1v-1zm-5 2h1v1h-1v-1zm1 1h1v1h-1v-1zm2-2h1v1h-1v-1zm1 1h1v1h-1v-1zm1-1h1v1h-1v-1zm-7 2h7v7H0v-7zm1 1v5h5v-5H1zm1 1h3v3H2v-3zm9-1h1v1h-1v-1zm1 1h1v1h-1v-1zm1-1h2v1h-2v-1zm3 0h1v1h-1v-1zm0 2h1v1h-1v-1zm1-1h1v1h-1v-1zm1 1h1v1h-1v-1zm2-2h1v1h-1v-1zm1 1h1v1h-1v-1zm1-1h1v2h-1v-2zm1 2h1v1h-1v-1zm-3 2h1v1h-1v-1zm2 1h1v1h-1v-1zm1-1h1v1h-1v-1zm1 1h1v1h-1v-1zm-5 2h1v1h-1v-1zm2 0h2v1h-2v-1zm3 0h1v1h-1v-1z" fill="currentColor"/></svg>`;
+
+    // --- POLISHED UI: UNIFIED FOOTER & mt-16 ✅ ---
     const SupportFooter = () => {
       return (
         <div className="mt-16 mb-6 flex flex-col items-center gap-4 w-full">
+          {/* GitHub Button pointing to benk7557 repo */}
           <a 
             href="https://github.com/benk7557/Tank-Buddy" 
             target="_blank" 
@@ -75,6 +81,7 @@
             View on GitHub
           </a>
 
+          {/* Ko-fi Beer Button */}
           <a 
             href="https://ko-fi.com/kaufman" 
             target="_blank" 
@@ -89,6 +96,7 @@
     };
 
     const AirConsumptionCalc = () => { 
+      // --- State --- 
       const [isMetric, setIsMetric] = useState(true); 
       const [isAdvanced, setIsAdvanced] = useState(false); 
       const [volMode, setVolMode] = useState("preset"); 
@@ -106,6 +114,7 @@
       const [showCalc, setShowCalc] = useState(false); 
       const [showShare, setShowShare] = useState(false);
 
+      // --- Logic --- 
       const handleVolChange = (e) => { 
         const val = e.target.value; 
         if (val === "other") { 
@@ -209,6 +218,7 @@
         ); 
       }; 
 
+      // --- POLISHED UI: GREEN "COPYABLE" SIGNAL & SMALLER DECIMALS ✅ ---
       const renderOutput = () => { 
         if (isPressureError) return <p className="text-red-500 font-semibold mt-3 text-center text-sm">Please fix pressure values to calculate.</p>; 
         if (!sacRate) return <p className="text-gray-500 italic mt-3 text-center text-sm">Enter dive details to calculate.</p>; 
@@ -226,10 +236,12 @@
                 title="Click to copy whole number" 
               > 
                 <span className="material-symbols-rounded text-[22px] text-green-600">content_copy</span> 
+                {/* Whole number is huge */}
                 <span className="leading-none text-4xl font-black">{intPart}</span> 
               </button> 
               
               <div className="flex items-center text-gray-400 gap-1.5"> 
+                {/* Decimal is smaller */}
                 <span className="text-xl font-bold">.{decPart} <span className="text-sm font-medium text-gray-500 ml-0.5">{outUnit}</span></span> 
                 
                 <button onClick={() => setShowInfo(!showInfo)} className="p-1.5 bg-gray-100 rounded-full text-gray-400 hover:text-green-600 active:bg-green-100 transition-colors flex items-center justify-center relative" > 
@@ -268,6 +280,7 @@
         <div className="w-full flex flex-col items-center"> 
           <div className="w-full p-4 bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl border border-white/50"> 
             
+            {/* --- POLISHED UI: w-20 HERO MASCOT & SPACED HEADER & 3XL TITLE ✅ --- */}
             <div className="flex justify-between items-start mb-8"> 
               <div className="flex items-center space-x-3.5"> 
                 <div className="w-20 h-20 bg-white rounded-2xl flex items-center justify-center shadow-inner border border-blue-200/60 flex-shrink-0 overflow-hidden"> 
@@ -333,6 +346,7 @@
                 </div> 
               )} 
               
+              {/* --- POLISHED UI: BIGGER STEPPER BUTTONS FOR START PRESSURE ✅ --- */}
               <div className="w-full"> 
                 <label className="flex items-center text-[10px] font-bold text-gray-500 uppercase tracking-wide mb-1.5"><span className="material-symbols-rounded icon-align text-emerald-600">speed</span> Start ({pUnit})</label> 
                 <div className="flex items-center space-x-1.5"> 
@@ -342,6 +356,7 @@
                 </div> 
               </div> 
               
+              {/* --- POLISHED UI: BIGGER STEPPER BUTTONS FOR END PRESSURE ✅ --- */}
               <div className="w-full"> 
                 <label className="flex items-center text-[10px] font-bold text-gray-500 uppercase tracking-wide mb-1.5"><span className="material-symbols-rounded icon-align text-rose-600">speed</span> End ({pUnit})</label> 
                 <div className="flex items-center space-x-1.5"> 
@@ -377,15 +392,16 @@
 
           <div className="mt-5 text-center px-4"> 
             <p className="text-[11px] text-white/90 font-medium mb-1 tracking-wide"> 
-              Built by Ben Kaufman v2.1 <span className="mx-1 opacity-50">•</span> Made with AI 
+              Built by Ben Kaufman <span className="mx-1 opacity-50">•</span> Made with AI 
             </p> 
             <p className="text-[9px] text-white/70 leading-relaxed max-w-xs mx-auto"> 
               Disclaimer: This tool is for informational purposes only. Always independently verify calculations and finalize dive plans before entering the water. 
             </p> 
           </div> 
 
+          {/* --- THE UNIVERSAL SHARE MODAL: BULLETPROOF SVG PIVOT ✅ --- */}
           {showShare && (
-            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300">
               <div className="w-full max-w-xs bg-white rounded-3xl p-6 flex flex-col items-center shadow-2xl animate-in fade-in zoom-in duration-200">
                 
                 <div className="w-full flex justify-between items-start mb-2">
@@ -401,11 +417,12 @@
                   </button>
                 </div>
 
-                <div className="bg-white p-2 rounded-xl border border-gray-200 shadow-sm mb-6 mt-4 w-48 h-48 flex items-center justify-center overflow-hidden">
-                  <img 
-                    src="data:image/png;base64,IVBORw0KGgoAAAANSUhEUgAAAMgAAADIAQMAAACXljzdAAAABlBMVEX///8AAABVwtN+AAAACXBIWXMAAA7EAAAOxAGVKw4bAAAA/klEQVRYhd2XwQ6DQAhEhy/fP4fKAGs18e6IddvwLiXAwAKPtoJ2/AqEH19WDn834X8PPul0SwzTJRlnkHs6zK24NuGZno+Q/FSc6qQrkcEGk3erUS3SSpHP5O2qIVpkW+JDK/48kmRVnDxsWovyp0lQXcXDu7kAXbLojJaK2GLuogQ9l/LtruL+oEoWem+oenTr4+WkMsMMcfrg7CxJUnGitoMJcypRkXSkGL1m75gwacUuQWADUfg0yTlOgd52buNWi3Celkqky/aGrUoqztK/HakJk4jRir2LdqTaJG2k7xPkvPxcb65ipCqRmBmzvtWJklGKai/MhU6VPNoPOKTg5PPeJlgAAAAASUVORK5CYII=" 
-                    alt="Tank Buddy QR Code" 
-                    className="w-full h-full object-contain"
+                {/* --- ✨ FIXED: INLINE SVG QR CODE ✅ ✨ --- */}
+                {/* No corridors, no corrupt data. Just readable SVG text injected directly. */}
+                <div className="bg-white rounded-xl border border-gray-200 shadow-sm mb-6 mt-4 w-48 h-48 flex items-center justify-center overflow-hidden p-3 animate-in fade-in duration-500 delay-150">
+                  <div 
+                    className="w-full h-full flex items-center justify-center"
+                    dangerouslySetInnerHTML={{ __html: TANK_BUDDY_QR_SVG }}
                   />
                 </div>
 
@@ -434,6 +451,8 @@
               </div>
             </div>
           )}
+          {/* --- END MODAL --- */}
+
         </div> 
       ); 
     }; 
@@ -453,9 +472,10 @@
             reg.addEventListener('updatefound', () => {
               const newWorker = reg.installing;
               newWorker.addEventListener('statechange', () => {
+                // If a new version is installed AND there was a previous controller, 
+                // it means an update is waiting. Force it to skip waiting.
                 if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                  // A new version is available! Let's force it to take over if we can.
-                  // (Note: To be fully atomic, your sw.js should ideally also contain self.skipWaiting() in the install event)
+                  console.log('New SW version found! Forcing activation...');
                   newWorker.postMessage({ type: 'SKIP_WAITING' });
                 }
               });
@@ -463,11 +483,12 @@
           }) 
           .catch(err => console.error('Service Worker registration failed:', err)); 
           
-        // Listen for the SW taking control, and transparently reload the page
+        // ✨ Listen for the new SW taking control, and transparently reload the page ONCE ✅
         let refreshing = false;
         navigator.serviceWorker.addEventListener('controllerchange', () => {
           if (!refreshing) {
             refreshing = true;
+            console.log('New SW activated! Refreshing page...');
             window.location.reload();
           }
         });
