@@ -60,7 +60,38 @@
 <body class="water-bg p-3 antialiased min-h-screen font-sans flex flex-col justify-center items-center"> 
   <div id="root" class="w-full max-w-md"></div> 
   <script type="text/babel"> 
-    const { useState, useEffect } = React; 
+    const { useState, useEffect } = React;
+
+    // --- DIVE LOG STORAGE UTILITIES ---
+    const saveDiveLog = (log) => {
+      const logs = getDiveLogs();
+      const newLog = {
+        id: Date.now(),
+        timestamp: new Date().toISOString(),
+        ...log
+      };
+      logs.unshift(newLog);
+      localStorage.setItem('tankBuddyLogs', JSON.stringify(logs));
+      return newLog;
+    };
+
+    const getDiveLogs = () => {
+      try {
+        const stored = localStorage.getItem('tankBuddyLogs');
+        return stored ? JSON.parse(stored) : [];
+      } catch {
+        return [];
+      }
+    };
+
+    const deleteDiveLog = (id) => {
+      const logs = getDiveLogs().filter(log => log.id !== id);
+      localStorage.setItem('tankBuddyLogs', JSON.stringify(logs));
+    };
+
+    const clearAllLogs = () => {
+      localStorage.removeItem('tankBuddyLogs');
+    };
 
     // --- SUPPORT FOOTER COMPONENT ---
     const SupportFooter = () => {
@@ -103,10 +134,13 @@
       const [diveTime, setDiveTime] = useState(45); 
       const [sacRate, setSacRate] = useState(null); 
       
-      const [copied, setCopied] = useState(false); 
-      const [showInfo, setShowInfo] = useState(false); 
-      const [showCalc, setShowCalc] = useState(false); 
+      const [copied, setCopied] = useState(false);
+      const [showInfo, setShowInfo] = useState(false);
+      const [showCalc, setShowCalc] = useState(false);
       const [showShare, setShowShare] = useState(false);
+      const [showHistory, setShowHistory] = useState(false);
+      const [diveLogs, setDiveLogs] = useState([]);
+      const [saved, setSaved] = useState(false);
 
       // --- Logic --- 
       const handleVolChange = (e) => { 
@@ -147,13 +181,48 @@
         } 
       }, [isMetric, tanks, tankVolume, workingPressure, startPressure, endPressure, avgDepth, diveTime]); 
 
-      useEffect(() => { 
-        let timer; 
-        if (showInfo) { 
-          timer = setTimeout(() => setShowInfo(false), 15000); 
-        } 
-        return () => clearTimeout(timer); 
-      }, [showInfo]); 
+      useEffect(() => {
+        let timer;
+        if (showInfo) {
+          timer = setTimeout(() => setShowInfo(false), 15000);
+        }
+        return () => clearTimeout(timer);
+      }, [showInfo]);
+
+      useEffect(() => {
+        setDiveLogs(getDiveLogs());
+      }, []);
+
+      const handleSaveDive = () => {
+        if (!sacRate) return;
+        const log = {
+          sacRate: sacRate.toFixed(2),
+          isMetric,
+          tanks,
+          tankVolume,
+          workingPressure,
+          startPressure,
+          endPressure,
+          avgDepth,
+          diveTime
+        };
+        saveDiveLog(log);
+        setDiveLogs(getDiveLogs());
+        setSaved(true);
+        setTimeout(() => setSaved(false), 2000);
+      };
+
+      const handleDeleteLog = (id) => {
+        deleteDiveLog(id);
+        setDiveLogs(getDiveLogs());
+      };
+
+      const handleClearAll = () => {
+        if (confirm('Delete all dive logs? This cannot be undone.')) {
+          clearAllLogs();
+          setDiveLogs([]);
+        }
+      }; 
 
       const handleCopy = (integerValue) => { 
         const triggerSuccess = () => { 
@@ -255,9 +324,18 @@
               </div> 
             </div> 
             
-            <div className="h-5 mt-2 text-sm"> 
-              {copied && <span className="text-green-600 font-bold transition-all">Copied to clipboard! ✓</span>} 
-            </div> 
+            <div className="h-5 mt-2 text-sm flex items-center justify-center gap-2">
+              {copied && <span className="text-green-600 font-bold transition-all">Copied to clipboard! ✓</span>}
+              {saved && <span className="text-blue-600 font-bold transition-all">Dive logged! ✓</span>}
+            </div>
+            <button
+              onClick={handleSaveDive}
+              disabled={!sacRate}
+              className={`mt-2 px-5 py-2.5 rounded-xl font-bold flex items-center justify-center gap-2 shadow-md transition-all ${sacRate ? 'bg-blue-600 text-white hover:bg-blue-700 active:scale-95' : 'bg-gray-200 text-gray-400 cursor-not-allowed'}`}
+            >
+              <span className="material-symbols-rounded text-[20px]">save</span>
+              Log This Dive
+            </button> 
             <div className="mt-2"> 
               <label className="inline-flex items-center text-gray-500 text-xs cursor-pointer hover:text-green-600 transition-colors"> 
                 <input type="checkbox" checked={showCalc} onChange={(e) => setShowCalc(e.target.checked)} className="form-checkbox h-3.5 w-3.5 text-green-500 rounded border-gray-300 mr-1.5" /> 
@@ -285,13 +363,27 @@
                 </div> 
               </div> 
               
-              <button 
-                onClick={() => setShowShare(true)} 
-                className="px-3 py-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 text-xs font-bold rounded-full shadow-sm active:scale-95 transition-all flex items-center gap-1.5 mt-1"
-              >
-                <span className="material-symbols-rounded text-[16px]">share</span>
-                Share
-              </button>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setShowHistory(true)}
+                  className="px-3 py-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 text-xs font-bold rounded-full shadow-sm active:scale-95 transition-all flex items-center gap-1.5 mt-1 relative"
+                >
+                  <span className="material-symbols-rounded text-[16px]">history</span>
+                  History
+                  {diveLogs.length > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-blue-600 text-white text-[9px] font-bold rounded-full w-4 h-4 flex items-center justify-center">
+                      {diveLogs.length}
+                    </span>
+                  )}
+                </button>
+                <button
+                  onClick={() => setShowShare(true)}
+                  className="px-3 py-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 text-xs font-bold rounded-full shadow-sm active:scale-95 transition-all flex items-center gap-1.5 mt-1"
+                >
+                  <span className="material-symbols-rounded text-[16px]">share</span>
+                  Share
+                </button>
+              </div>
             </div> 
             
             <div className="flex justify-center mb-4 p-0.5 bg-blue-50/50 rounded-2xl border border-blue-100"> 
@@ -391,18 +483,106 @@
             </p> 
           </div> 
 
+          {/* --- HISTORY MODAL --- */}
+          {showHistory && (
+            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300">
+              <div className="w-full max-w-md bg-white rounded-3xl p-6 shadow-2xl animate-in fade-in zoom-in duration-200 max-h-[90vh] flex flex-col">
+
+                <div className="w-full flex justify-between items-start mb-4">
+                  <div className="flex flex-col">
+                    <h3 className="text-xl font-black text-blue-900 leading-none">Dive History</h3>
+                    <p className="text-[10px] text-blue-500 font-bold uppercase tracking-widest mt-1">
+                      {diveLogs.length} {diveLogs.length === 1 ? 'Log' : 'Logs'}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setShowHistory(false)}
+                    className="p-1 text-gray-400 hover:text-gray-700 bg-gray-100 rounded-full active:scale-95 transition-all"
+                  >
+                    <span className="material-symbols-rounded text-[18px] block">close</span>
+                  </button>
+                </div>
+
+                <div className="flex-1 overflow-y-auto space-y-3 mb-4">
+                  {diveLogs.length === 0 ? (
+                    <div className="text-center py-12">
+                      <span className="material-symbols-rounded text-6xl text-gray-300 block mb-3">scuba_diving</span>
+                      <p className="text-gray-500 font-medium">No dives logged yet</p>
+                      <p className="text-xs text-gray-400 mt-1">Calculate a SAC rate and click "Log This Dive"</p>
+                    </div>
+                  ) : (
+                    diveLogs.map((log) => {
+                      const date = new Date(log.timestamp);
+                      const dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                      const timeStr = date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+                      const pUnit = log.isMetric ? 'bar' : 'psi';
+                      const dUnit = log.isMetric ? 'm' : 'ft';
+                      const sacUnit = log.isMetric ? 'L/min' : 'cu ft/min';
+
+                      return (
+                        <div key={log.id} className="bg-gray-50 rounded-2xl p-4 border border-gray-200 shadow-sm">
+                          <div className="flex justify-between items-start mb-2">
+                            <div>
+                              <p className="text-2xl font-black text-blue-900">{log.sacRate} <span className="text-sm font-medium text-gray-500">{sacUnit}</span></p>
+                              <p className="text-[10px] text-gray-500 font-medium">{dateStr} at {timeStr}</p>
+                            </div>
+                            <button
+                              onClick={() => handleDeleteLog(log.id)}
+                              className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-full active:scale-95 transition-all"
+                              title="Delete log"
+                            >
+                              <span className="material-symbols-rounded text-[18px] block">delete</span>
+                            </button>
+                          </div>
+                          <div className="grid grid-cols-2 gap-2 text-xs mt-3">
+                            <div className="bg-white rounded-lg p-2 border border-gray-200">
+                              <p className="text-gray-500 font-semibold mb-0.5">Depth</p>
+                              <p className="text-gray-800 font-bold">{log.avgDepth} {dUnit}</p>
+                            </div>
+                            <div className="bg-white rounded-lg p-2 border border-gray-200">
+                              <p className="text-gray-500 font-semibold mb-0.5">Time</p>
+                              <p className="text-gray-800 font-bold">{log.diveTime} min</p>
+                            </div>
+                            <div className="bg-white rounded-lg p-2 border border-gray-200">
+                              <p className="text-gray-500 font-semibold mb-0.5">Start/End</p>
+                              <p className="text-gray-800 font-bold">{log.startPressure}/{log.endPressure} {pUnit}</p>
+                            </div>
+                            <div className="bg-white rounded-lg p-2 border border-gray-200">
+                              <p className="text-gray-500 font-semibold mb-0.5">Tank</p>
+                              <p className="text-gray-800 font-bold">{log.tanks}x {log.tankVolume}{log.isMetric ? 'L' : 'cf'}</p>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+
+                {diveLogs.length > 0 && (
+                  <button
+                    onClick={handleClearAll}
+                    className="w-full py-2.5 bg-red-50 text-red-600 hover:bg-red-100 rounded-xl font-bold text-sm active:scale-95 transition-all border border-red-200"
+                  >
+                    Clear All History
+                  </button>
+                )}
+
+              </div>
+            </div>
+          )}
+
           {/* --- THE UNIVERSAL SHARE MODAL (WITH IMAGE FIX) --- */}
           {showShare && (
             <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300">
               <div className="w-full max-w-xs bg-white rounded-3xl p-6 flex flex-col items-center shadow-2xl animate-in fade-in zoom-in duration-200">
-                
+
                 <div className="w-full flex justify-between items-start mb-2">
                   <div className="flex flex-col">
                     <h3 className="text-xl font-black text-blue-900 leading-none">Buddy-Up</h3>
                     <p className="text-[10px] text-blue-500 font-bold uppercase tracking-widest mt-1">Share Tank Buddy</p>
                   </div>
-                  <button 
-                    onClick={() => setShowShare(false)} 
+                  <button
+                    onClick={() => setShowShare(false)}
                     className="p-1 text-gray-400 hover:text-gray-700 bg-gray-100 rounded-full active:scale-95 transition-all"
                   >
                     <span className="material-symbols-rounded text-[18px] block">close</span>
@@ -413,14 +593,14 @@
                   <img src="/qr.png" alt="Tank Buddy QR Code" className="w-full h-full object-contain" />
                 </div>
 
-                <button 
+                <button
                   onClick={async () => {
                     if (navigator.share) {
                       try {
-                        await navigator.share({ 
-                          title: 'Tank Buddy', 
-                          text: 'Calculate your dive SAC rate offline.', 
-                          url: 'https://tankbuddy.net' 
+                        await navigator.share({
+                          title: 'Tank Buddy',
+                          text: 'Calculate your dive SAC rate offline.',
+                          url: 'https://tankbuddy.net'
                         });
                       } catch (err) {
                         console.log("Share cancelled");

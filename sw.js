@@ -1,5 +1,5 @@
 self.skipWaiting();
-const CACHE_NAME = 'tank-buddy-v2.4';
+const CACHE_NAME = 'tank-buddy-v2.5';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
