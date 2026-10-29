@@ -340,16 +340,19 @@
 
     const AirConsumptionCalc = () => {
       // --- State ---
-      const [isMetric, setIsMetric] = useState(true);
+      const [initialImperial] = useState(() => {
+        try { return localStorage.getItem('tankBuddyUnits') === 'imperial'; } catch (e) { return false; }
+      });
+      const [isMetric, setIsMetric] = useState(!initialImperial);
       const [isAdvanced, setIsAdvanced] = useState(false);
       useEffect(() => { document.body.classList.toggle('adv-compact', isAdvanced); }, [isAdvanced]);
       const [volMode, setVolMode] = useState("preset");
       const [tanks, setTanks] = useState(1);
-      const [tankVolume, setTankVolume] = useState(11.1);
+      const [tankVolume, setTankVolume] = useState(initialImperial ? 80 : 11.1);
       const [workingPressure, setWorkingPressure] = useState(3000);
-      const [startPressure, setStartPressure] = useState(200);
-      const [endPressure, setEndPressure] = useState(50);
-      const [avgDepth, setAvgDepth] = useState(15);
+      const [startPressure, setStartPressure] = useState(initialImperial ? 3000 : 200);
+      const [endPressure, setEndPressure] = useState(initialImperial ? 700 : 50);
+      const [avgDepth, setAvgDepth] = useState(initialImperial ? 50 : 15);
       const [diveTime, setDiveTime] = useState(45);
       const [sacRate, setSacRate] = useState(null);
 
@@ -362,6 +365,26 @@
       const [saved, setSaved] = useState(false);
 
       // --- Logic ---
+      const handleUnitChange = (toMetric) => {
+        if (toMetric === isMetric) return;
+        const conv = (v, f) => (v === '' || v === null || isNaN(Number(v))) ? '' : f(Number(v));
+        if (toMetric) {
+          setStartPressure(conv(startPressure, (v) => Math.round(v / 14.5038 / 10) * 10));
+          setEndPressure(conv(endPressure, (v) => Math.round(v / 14.5038 / 10) * 10));
+          setAvgDepth(conv(avgDepth, (v) => Math.round(v / 3.28084)));
+          setTankVolume(11.1);
+        } else {
+          setStartPressure(conv(startPressure, (v) => Math.round(v * 14.5038 / 100) * 100));
+          setEndPressure(conv(endPressure, (v) => Math.round(v * 14.5038 / 100) * 100));
+          setAvgDepth(conv(avgDepth, (v) => Math.round(v * 3.28084)));
+          setTankVolume(80);
+          setWorkingPressure(3000);
+        }
+        setVolMode("preset");
+        setIsMetric(toMetric);
+        try { localStorage.setItem('tankBuddyUnits', toMetric ? 'metric' : 'imperial'); } catch (e) {}
+      };
+
       const handleVolChange = (e) => {
         const val = e.target.value;
         if (val === "other") {
@@ -530,6 +553,8 @@
         );
         const sacString = sacRate.toFixed(2);
         const [intPart, decPart] = sacString.split('.');
+        // Imperial SAC is usually below 1 cu ft/min, so copy the full value there
+        const copyValue = isMetric ? intPart : sacString;
 
         return (
           <div className={`relative rounded-3xl bg-abyss-900 px-4 text-white transition-all duration-300 ${isAdvanced ? 'pt-3 pb-3' : 'pt-4 pb-4'}`}>
@@ -555,7 +580,7 @@
                         <span aria-hidden="true" className="material-symbols-rounded text-base block">close</span>
                       </button>
                     </div>
-                    <p className="text-abyss-800/80 leading-relaxed font-medium">The SAC is usually logged without the decimals. Tap the green box once to copy the whole number.</p>
+                    <p className="text-abyss-800/80 leading-relaxed font-medium">{isMetric ? 'The SAC is usually logged without the decimals. Tap the green box once to copy the whole number.' : 'Imperial SAC is usually logged to two decimals. Tap the green box once to copy it.'}</p>
                     <div className="absolute top-full right-3 -mt-[1px] border-8 border-transparent border-t-white"></div>
                   </div>
                 )}
@@ -565,16 +590,16 @@
             <div className="relative flex items-end justify-center gap-3">
               {/* GREEN COPY BUTTON */}
               <button
-                onClick={() => handleCopy(intPart)}
+                onClick={() => handleCopy(copyValue)}
                 className={`flex items-center gap-2.5 rounded-2xl px-5 ${isAdvanced ? 'py-1.5' : 'py-3'} border-2 transition-all active:scale-[0.97] ${copied ? 'bg-emerald-400 border-emerald-300 text-abyss-950' : 'bg-emerald-400/10 border-emerald-400/70 text-emerald-300 hover:bg-emerald-400/20'}`}
-                title="Copy whole number"
-                aria-label={`Copy ${intPart} to clipboard`}
+                title={isMetric ? 'Copy whole number' : 'Copy SAC'}
+                aria-label={`Copy ${copyValue} to clipboard`}
               >
                 <span aria-hidden="true" className="material-symbols-rounded text-[22px]">{copied ? 'check' : 'content_copy'}</span>
-                <span className={`font-mono tabular leading-none ${isAdvanced ? 'text-[44px]' : 'text-[56px]'} font-extrabold tracking-tighter transition-all duration-300`}>{intPart}</span>
+                <span className={`font-mono tabular leading-none ${isAdvanced ? 'text-[44px]' : 'text-[56px]'} font-extrabold tracking-tighter transition-all duration-300`}>{copyValue}</span>
               </button>
               <div className="flex flex-col pb-2 font-mono tabular">
-                <span className="text-2xl font-bold text-white/60 leading-none">.{decPart}</span>
+                {isMetric && <span className="text-2xl font-bold text-white/60 leading-none">.{decPart}</span>}
                 <span className="text-[12px] font-medium text-reef-200/70 mt-1.5">{outUnit}</span>
               </div>
             </div>
@@ -641,22 +666,27 @@
 
           <main className={`w-full bg-[#f6fbfd] rounded-[28px] card-shadow border border-white/70 transition-all duration-300 ${isAdvanced ? 'p-3' : 'p-4 sm:p-5'}`}>
 
-            {/* ADVANCED TOGGLE */}
-            <label className={`flex items-center justify-between gap-3 px-3.5 rounded-2xl border cursor-pointer select-none transition-all duration-300 ${isAdvanced ? 'py-2 mb-3 bg-reef-500 border-reef-600' : 'py-3 mb-4 bg-white border-abyss-900/10'}`}>
-              <span className="flex items-center gap-2.5">
-                <span className={`w-9 h-9 rounded-xl flex items-center justify-center transition-colors duration-300 ${isAdvanced ? 'bg-abyss-950/15 text-abyss-950' : 'bg-reef-50 text-reef-700'}`}>
-                  <span aria-hidden="true" className="material-symbols-rounded text-[20px]">tune</span>
+            {/* UNITS + ADVANCED TOGGLE */}
+            <div className={`grid grid-cols-2 gap-2 transition-all duration-300 ${isAdvanced ? 'mb-3' : 'mb-4'}`}>
+              <label className={`min-w-0 flex items-center justify-between gap-2 px-3 min-h-[44px] rounded-2xl border cursor-pointer select-none transition-all duration-300 ${isAdvanced ? 'py-1 bg-reef-500 border-reef-600' : 'py-1 bg-white border-abyss-900/10'}`}>
+                <span className="flex items-center gap-2.5">
+                  <span className="flex flex-col">
+                    <span className={`font-display text-[15px] font-semibold leading-tight transition-colors duration-300 ${isAdvanced ? 'text-abyss-950' : 'text-abyss-900'}`}>Advanced diver</span>
+                    <span className="sr-only">Twinsets, tank size and custom volumes</span>
+                  </span>
                 </span>
-                <span className="flex flex-col">
-                  <span className={`font-display text-[16px] font-semibold leading-tight transition-colors duration-300 ${isAdvanced ? 'text-abyss-950' : 'text-abyss-900'}`}>Advanced diver</span>
-                  <span className={`text-[12px] overflow-hidden transition-all duration-300 ${isAdvanced ? 'max-h-0 opacity-0' : 'max-h-5 opacity-100 text-abyss-800/70'}`}>Twinsets, tank size and custom volumes</span>
+                <input type="checkbox" role="switch" checked={isAdvanced} onChange={(e) => setIsAdvanced(e.target.checked)} className="sr-only" />
+                <span className={`relative w-12 h-7 shrink-0 rounded-full transition-colors duration-200 ${isAdvanced ? 'bg-abyss-900' : 'bg-abyss-900/15'}`}>
+                  <span className={`absolute left-0.5 top-0.5 w-6 h-6 bg-white rounded-full shadow transition-transform duration-200 ${isAdvanced ? 'translate-x-5' : ''}`}></span>
                 </span>
-              </span>
-              <input type="checkbox" role="switch" checked={isAdvanced} onChange={(e) => setIsAdvanced(e.target.checked)} className="sr-only" />
-              <span className={`relative w-12 h-7 shrink-0 rounded-full transition-colors duration-200 ${isAdvanced ? 'bg-abyss-900' : 'bg-abyss-900/15'}`}>
-                <span className={`absolute left-0.5 top-0.5 w-6 h-6 bg-white rounded-full shadow transition-transform duration-200 ${isAdvanced ? 'translate-x-5' : ''}`}></span>
-              </span>
-            </label>
+              </label>
+              <div role="radiogroup" aria-label="Units" className="grid grid-cols-2 rounded-2xl border border-abyss-900/10 bg-white overflow-hidden">
+                {[[true, 'bar · m'], [false, 'psi · ft']].map(([m, text]) => (
+                  <button key={text} type="button" role="radio" aria-checked={isMetric === m} aria-label={m ? 'Metric, bar and meters' : 'Imperial, psi and feet'} onClick={() => handleUnitChange(m)}
+                    className={`min-h-[44px] px-1 text-[13px] font-mono font-bold whitespace-nowrap transition-colors ${isMetric === m ? 'bg-abyss-900 text-white' : 'text-abyss-800/80 hover:bg-reef-50'}`}>{text}</button>
+                ))}
+              </div>
+            </div>
 
             <div className={`transition-all duration-300 ${isAdvanced ? 'space-y-2.5' : 'space-y-4'}`}>
               {isAdvanced && (
