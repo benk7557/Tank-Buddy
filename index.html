@@ -1,17 +1,18 @@
-<!DOCTYPE html> 
-<html lang="en"> 
-<head> 
-  <meta charset="UTF-8"> 
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"> 
-  
-  <title>Tank Buddy - Easy to Use Dive SAC Calc</title> 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+
+  <title>Tank Buddy - Easy to Use Dive SAC Calc</title>
   <meta name="description" content="An easy to use, lightning-fast, offline-first SAC calculator for scuba divers. Plan your gas consumption instantly on the dive boat.">
   <meta name="keywords" content="scuba diving, SAC calculator, gas planning, dive safety, PWA, easy surface air consumption tool, offline dive app, benk7557, thailand diving">
-  
-  <link rel="manifest" href="/manifest.json"> 
-  <meta name="theme-color" content="#006994"> 
-  <link rel="apple-touch-icon" href="/icon-192.png"> 
-  
+
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#06283a">
+  <link rel="icon" type="image/png" href="/icon-192.png">
+  <link rel="apple-touch-icon" href="/icon-192.png">
+
   <meta property="og:title" content="Tank Buddy | Easy Scuba SAC Calculator">
   <meta property="og:description" content="Calculate your Surface Air Consumption rate instantly. Built for divers, optimized for offline use.">
   <meta property="og:url" content="https://tankbuddy.net">
@@ -34,32 +35,109 @@
   }
   </script>
 
-  <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script> 
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script> 
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script> 
-  <script src="https://cdn.tailwindcss.com"></script> 
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20,600,0,0" /> 
-  <style> 
-    @keyframes flowingWater { 
-      0% { background-position: 0% 50%; } 
-      50% { background-position: 100% 50%; } 
-      100% { background-position: 0% 50%; } 
-    } 
-    .water-bg { 
-      background: linear-gradient(-45deg, #006994, #00a8cc, #20b2aa, #48d1cc); 
-      background-size: 400% 400%; 
-      animation: flowingWater 12s ease infinite; 
-    } 
-    .icon-align { 
-      font-size: 16px !important; 
-      margin-right: 3px; 
-      vertical-align: text-bottom; 
-    } 
-  </style> 
-</head> 
-<body class="water-bg p-3 antialiased min-h-screen font-sans flex flex-col justify-center items-center"> 
-  <div id="root" class="w-full max-w-md"></div> 
-  <script type="text/babel"> 
+  <script src="https://unpkg.com/react@18.3.1/umd/react.production.min.js" integrity="sha384-DGyLxAyjq0f9SPpVevD6IgztCFlnMF6oW/XQGmfe+IsZ8TqEiDrcHkMLKI6fiB/Z" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js" integrity="sha384-gTGxhz21lVGYNMcdJOyq01Edg0jhn/c22nsx0kyqP0TxaV5WVdsSH1fSDUf5YJj1" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.11/babel.min.js" integrity="sha384-WLl8kKG54INe3zxB+zrpQr6Z1cgCoBg+ZirrqnCcjzA5sjvtSirQ11bgyU91deI+" crossorigin="anonymous"></script>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            display: ['Outfit', 'system-ui', 'sans-serif'],
+            sans: ['Manrope', 'system-ui', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'ui-monospace', 'monospace'],
+          },
+          colors: {
+            abyss: { 950: '#04141f', 900: '#062436', 800: '#0a3550', 700: '#0f4a6b' },
+            reef: { 50: '#ecfbfd', 100: '#cff4f8', 200: '#a2e8f1', 400: '#2fc4dc', 500: '#00a8cc', 600: '#0089ab', 700: '#006994' },
+          },
+        },
+      },
+    };
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700;800&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20,600,0,0" />
+  <style>
+    @keyframes flowingWater {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    /* The signature tankbuddy.net flowing water, sinking into deep blue */
+    .water-bg {
+      background-color: #062436;
+      background-image:
+        linear-gradient(180deg, rgba(4, 20, 31, 0) 0%, rgba(4, 20, 31, 0.55) 55%, rgba(4, 20, 31, 0.92) 100%),
+        linear-gradient(-45deg, #006994, #00a8cc, #20b2aa, #48d1cc);
+      background-size: 100% 100%, 400% 400%;
+      background-attachment: fixed;
+      animation: flowingWater 12s ease infinite;
+    }
+    .caustics {
+      position: fixed; inset: 0; pointer-events: none; z-index: 0;
+      background:
+        radial-gradient(60% 35% at 20% -5%, rgba(255, 255, 255, 0.28), transparent 70%),
+        radial-gradient(45% 30% at 85% 0%, rgba(200, 250, 255, 0.18), transparent 70%);
+    }
+    .bubble {
+      position: fixed; bottom: -40px; border-radius: 9999px; pointer-events: none; z-index: 0;
+      border: 1px solid rgba(255, 255, 255, 0.35);
+      background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.45), rgba(255, 255, 255, 0.04) 60%);
+      animation: rise linear infinite;
+    }
+    @keyframes rise {
+      0% { transform: translate3d(0, 0, 0); opacity: 0; }
+      10% { opacity: 0.8; }
+      100% { transform: translate3d(14px, -110vh, 0); opacity: 0; }
+    }
+    @keyframes popIn {
+      from { opacity: 0; transform: translateY(8px) scale(0.98); }
+      to { opacity: 1; transform: none; }
+    }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    .pop-in { animation: popIn 0.28s cubic-bezier(0.2, 0.9, 0.3, 1.2) both; }
+    .fade-in { animation: fadeIn 0.2s ease both; }
+    @media (prefers-reduced-motion: reduce) {
+      .water-bg, .bubble, .pop-in, .fade-in { animation: none; }
+      .bubble { display: none; }
+    }
+    .icon-align {
+      font-size: 16px !important;
+      margin-right: 3px;
+      vertical-align: text-bottom;
+    }
+    .tabular { font-variant-numeric: tabular-nums; }
+    input[type=number]::-webkit-outer-spin-button,
+    input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+    input[type=number] { -moz-appearance: textfield; }
+    select {
+      -webkit-appearance: none; appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%230a3550'%3E%3Cpath d='M5.5 7.5 10 12l4.5-4.5'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 0.6rem center; background-size: 1rem;
+      padding-right: 2rem !important;
+    }
+    .field { transition: border-color 0.2s, box-shadow 0.2s, background-color 0.2s; }
+    .field:focus { outline: none; border-color: #00a8cc; box-shadow: 0 0 0 4px rgba(0, 168, 204, 0.18); }
+    button:focus-visible, a:focus-visible, label:has(input.sr-only:focus-visible) { outline: 2px solid #00a8cc; outline-offset: 2px; }
+    .card-shadow { box-shadow: 0 1px 0 rgba(255, 255, 255, 0.7) inset, 0 30px 60px -20px rgba(2, 30, 48, 0.55), 0 12px 24px -12px rgba(2, 30, 48, 0.35); }
+    body.water-bg { transition: padding .3s ease; }
+    body.water-bg.adv-compact { padding-top: .75rem; padding-bottom: 1rem; }
+  </style>
+</head>
+<body class="water-bg antialiased min-h-[100dvh] font-sans text-abyss-900 flex flex-col items-center px-4 pt-6 pb-8 sm:justify-center">
+  <div class="caustics" aria-hidden="true"></div>
+  <div aria-hidden="true">
+    <span class="bubble" style="left:8%;width:10px;height:10px;animation-duration:14s;animation-delay:0s"></span>
+    <span class="bubble" style="left:22%;width:6px;height:6px;animation-duration:11s;animation-delay:4s"></span>
+    <span class="bubble" style="left:78%;width:14px;height:14px;animation-duration:17s;animation-delay:2s"></span>
+    <span class="bubble" style="left:90%;width:7px;height:7px;animation-duration:12s;animation-delay:7s"></span>
+    <span class="bubble" style="left:64%;width:5px;height:5px;animation-duration:10s;animation-delay:9s"></span>
+  </div>
+  <div id="root" class="relative z-10 w-full max-w-md"></div>
+  <script type="text/babel">
     const { useState, useEffect } = React;
 
     // --- DIVE LOG STORAGE UTILITIES ---
@@ -93,47 +171,91 @@
       localStorage.removeItem('tankBuddyLogs');
     };
 
+    // --- SHARED UI PIECES ---
+    const FieldLabel = ({ icon, iconClass = '', tight = false, children }) => (
+      <span className={`flex items-center gap-1.5 text-[12px] font-semibold text-abyss-800/70 transition-all duration-300 ${tight ? 'mb-1' : 'mb-2'}`}>
+        <span className={`material-symbols-rounded text-[16px] ${iconClass}`}>{icon}</span>
+        {children}
+      </span>
+    );
+
+    const Stepper = ({ label, icon, iconClass, value, onChange, step, unit, error, compact = false }) => {
+      const stepBtn = "w-14 shrink-0 self-stretch rounded-xl bg-abyss-900/[0.05] hover:bg-abyss-900/[0.09] active:bg-abyss-900/[0.14] active:scale-[0.97] text-abyss-800 font-mono font-bold text-[15px] transition-all";
+      return (
+        <div className="w-full">
+          <FieldLabel icon={icon} iconClass={iconClass} tight={compact}>{label}</FieldLabel>
+          <div className={`flex items-stretch gap-1.5 p-1.5 rounded-2xl border transition-colors ${error ? 'border-rose-300 bg-rose-50' : 'border-abyss-900/10 bg-white'}`}>
+            <button type="button" aria-label={`Decrease ${label} by ${step}`} onClick={() => onChange(Math.max(0, (Number(value) || 0) - step))} className={stepBtn}>−{step}</button>
+            <div className="relative flex-1">
+              <input
+                type="number"
+                inputMode="numeric"
+                aria-label={label}
+                value={value}
+                onChange={(e) => onChange(e.target.value === '' ? '' : Number(e.target.value))}
+                className={`field w-full h-full ${compact ? 'min-h-[42px]' : 'min-h-[52px]'} transition-all duration-300 rounded-xl border border-transparent bg-transparent text-center font-mono tabular text-[26px] font-bold tracking-tight ${error ? 'text-rose-700' : 'text-abyss-900'}`}
+              />
+              <span className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-[11px] font-semibold text-abyss-800/40">{unit}</span>
+            </div>
+            <button type="button" aria-label={`Increase ${label} by ${step}`} onClick={() => onChange((Number(value) || 0) + step)} className={stepBtn}>+{step}</button>
+          </div>
+        </div>
+      );
+    };
+
+    const ModalShell = ({ onClose, title, subtitle, maxWidth = 'max-w-md', children }) => (
+      <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-3 sm:p-4 bg-abyss-950/60 backdrop-blur-sm fade-in" onClick={onClose}>
+        <div role="dialog" aria-modal="true" aria-label={title} onClick={(e) => e.stopPropagation()} className={`w-full ${maxWidth} bg-white rounded-[28px] p-5 sm:p-6 card-shadow pop-in max-h-[88dvh] flex flex-col`}>
+          <div className="w-full flex justify-between items-start mb-4">
+            <div className="flex flex-col">
+              <h3 className="font-display text-[22px] font-bold text-abyss-900 leading-none tracking-tight">{title}</h3>
+              <p className="text-[12px] text-reef-700 font-semibold mt-1.5">{subtitle}</p>
+            </div>
+            <button
+              onClick={onClose}
+              aria-label="Close"
+              className="w-9 h-9 flex items-center justify-center text-abyss-800/60 hover:text-abyss-900 bg-abyss-900/[0.05] hover:bg-abyss-900/[0.09] rounded-full active:scale-95 transition-all"
+            >
+              <span className="material-symbols-rounded text-[20px] block">close</span>
+            </button>
+          </div>
+          {children}
+        </div>
+      </div>
+    );
+
     // --- SUPPORT FOOTER COMPONENT ---
     const SupportFooter = () => {
       return (
-        <div className="mt-16 mb-6 flex flex-col items-center gap-4 w-full">
-          <a 
-            href="https://github.com/benk7557/Tank-Buddy" 
-            target="_blank" 
+        <div className="mt-8 flex flex-col items-center w-full">
+          <a
+            href="https://github.com/benk7557/Tank-Buddy"
+            target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center justify-center gap-2 px-6 py-3 bg-slate-800 text-white font-bold rounded-full shadow-lg hover:bg-slate-700 active:scale-95 transition-all border border-slate-600 backdrop-blur-sm w-64"
+            className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-full text-white/90 text-sm font-semibold bg-white/10 hover:bg-white/20 border border-white/20 backdrop-blur-md active:scale-95 transition-all"
           >
-            <span className="material-symbols-rounded">code</span>
+            <span className="material-symbols-rounded text-[18px]">code</span>
             View on GitHub
-          </a>
-
-          <a 
-            href="https://ko-fi.com/kaufman" 
-            target="_blank" 
-            rel="noopener noreferrer"
-            className="flex items-center justify-center gap-2 px-6 py-3 bg-amber-400 text-yellow-900 font-bold rounded-full shadow-lg hover:bg-amber-300 active:scale-95 transition-all border border-amber-300 backdrop-blur-sm w-64"
-          >
-            <span className="material-symbols-rounded">sports_bar</span>
-            Buy me a post-dive beer
           </a>
         </div>
       );
     };
 
-    const AirConsumptionCalc = () => { 
-      // --- State --- 
-      const [isMetric, setIsMetric] = useState(true); 
-      const [isAdvanced, setIsAdvanced] = useState(false); 
-      const [volMode, setVolMode] = useState("preset"); 
-      const [tanks, setTanks] = useState(1); 
-      const [tankVolume, setTankVolume] = useState(11.1); 
-      const [workingPressure, setWorkingPressure] = useState(3000); 
-      const [startPressure, setStartPressure] = useState(200); 
-      const [endPressure, setEndPressure] = useState(50); 
-      const [avgDepth, setAvgDepth] = useState(15); 
-      const [diveTime, setDiveTime] = useState(45); 
-      const [sacRate, setSacRate] = useState(null); 
-      
+    const AirConsumptionCalc = () => {
+      // --- State ---
+      const [isMetric, setIsMetric] = useState(true);
+      const [isAdvanced, setIsAdvanced] = useState(false);
+      useEffect(() => { document.body.classList.toggle('adv-compact', isAdvanced); }, [isAdvanced]);
+      const [volMode, setVolMode] = useState("preset");
+      const [tanks, setTanks] = useState(1);
+      const [tankVolume, setTankVolume] = useState(11.1);
+      const [workingPressure, setWorkingPressure] = useState(3000);
+      const [startPressure, setStartPressure] = useState(200);
+      const [endPressure, setEndPressure] = useState(50);
+      const [avgDepth, setAvgDepth] = useState(15);
+      const [diveTime, setDiveTime] = useState(45);
+      const [sacRate, setSacRate] = useState(null);
+
       const [copied, setCopied] = useState(false);
       const [showInfo, setShowInfo] = useState(false);
       const [showCalc, setShowCalc] = useState(false);
@@ -142,44 +264,44 @@
       const [diveLogs, setDiveLogs] = useState([]);
       const [saved, setSaved] = useState(false);
 
-      // --- Logic --- 
-      const handleVolChange = (e) => { 
-        const val = e.target.value; 
-        if (val === "other") { 
-          setVolMode("custom"); 
-          setTankVolume(''); 
-        } else { 
-          setVolMode("preset"); 
-          if (isMetric) { 
-            setTankVolume(Number(val)); 
-          } else { 
-            const [v, wp] = val.split('-'); 
-            setTankVolume(Number(v)); 
-            setWorkingPressure(Number(wp)); 
-          } 
-        } 
-      }; 
+      // --- Logic ---
+      const handleVolChange = (e) => {
+        const val = e.target.value;
+        if (val === "other") {
+          setVolMode("custom");
+          setTankVolume('');
+        } else {
+          setVolMode("preset");
+          if (isMetric) {
+            setTankVolume(Number(val));
+          } else {
+            const [v, wp] = val.split('-');
+            setTankVolume(Number(v));
+            setWorkingPressure(Number(wp));
+          }
+        }
+      };
 
-      useEffect(() => { 
-        const isValidVolume = tankVolume !== ''; 
-        const isValidWP = isMetric || workingPressure !== ''; 
-        if (startPressure !== '' && endPressure !== '' && avgDepth !== '' && diveTime !== '' && diveTime > 0 && isValidVolume && isValidWP) { 
-          let calculatedSac = 0; 
-          if (isMetric) { 
-            const gasConsumed = (startPressure - endPressure) * tankVolume * tanks; 
-            const ambientPressure = (avgDepth / 10) + 1; 
-            calculatedSac = gasConsumed / (diveTime * ambientPressure); 
-          } else { 
-            const tankFactor = tankVolume / workingPressure; 
-            const gasConsumed = (startPressure - endPressure) * tankFactor * tanks; 
-            const ambientPressure = (avgDepth / 33) + 1; 
-            calculatedSac = gasConsumed / (diveTime * ambientPressure); 
-          } 
-          setSacRate(calculatedSac > 0 ? calculatedSac : null); 
-        } else { 
-          setSacRate(null); 
-        } 
-      }, [isMetric, tanks, tankVolume, workingPressure, startPressure, endPressure, avgDepth, diveTime]); 
+      useEffect(() => {
+        const isValidVolume = tankVolume !== '';
+        const isValidWP = isMetric || workingPressure !== '';
+        if (startPressure !== '' && endPressure !== '' && avgDepth !== '' && diveTime !== '' && diveTime > 0 && isValidVolume && isValidWP) {
+          let calculatedSac = 0;
+          if (isMetric) {
+            const gasConsumed = (startPressure - endPressure) * tankVolume * tanks;
+            const ambientPressure = (avgDepth / 10) + 1;
+            calculatedSac = gasConsumed / (diveTime * ambientPressure);
+          } else {
+            const tankFactor = tankVolume / workingPressure;
+            const gasConsumed = (startPressure - endPressure) * tankFactor * tanks;
+            const ambientPressure = (avgDepth / 33) + 1;
+            calculatedSac = gasConsumed / (diveTime * ambientPressure);
+          }
+          setSacRate(calculatedSac > 0 ? calculatedSac : null);
+        } else {
+          setSacRate(null);
+        }
+      }, [isMetric, tanks, tankVolume, workingPressure, startPressure, endPressure, avgDepth, diveTime]);
 
       useEffect(() => {
         let timer;
@@ -192,6 +314,18 @@
       useEffect(() => {
         setDiveLogs(getDiveLogs());
       }, []);
+
+      useEffect(() => {
+        if (!showHistory && !showShare) return;
+        const onKey = (e) => {
+          if (e.key === 'Escape') {
+            setShowHistory(false);
+            setShowShare(false);
+          }
+        };
+        window.addEventListener('keydown', onKey);
+        return () => window.removeEventListener('keydown', onKey);
+      }, [showHistory, showShare]);
 
       const handleSaveDive = () => {
         if (!sacRate) return;
@@ -222,376 +356,369 @@
           clearAllLogs();
           setDiveLogs([]);
         }
-      }; 
+      };
 
-      const handleCopy = (integerValue) => { 
-        const triggerSuccess = () => { 
-          setCopied(true); 
-          setTimeout(() => setCopied(false), 2000); 
-        }; 
-        if (navigator.clipboard && window.isSecureContext) { 
-          navigator.clipboard.writeText(integerValue) 
-            .then(triggerSuccess) 
-            .catch(err => console.error("Clipboard API failed", err)); 
-        } else { 
-          let success = false; 
-          const textArea = document.createElement("textarea"); 
-          textArea.value = integerValue; 
-          textArea.style.position = "fixed"; 
-          textArea.style.left = "-9999px"; 
-          textArea.style.top = "0"; 
-          document.body.appendChild(textArea); 
-          textArea.focus(); 
-          textArea.select(); 
-          try { 
-            success = document.execCommand("copy"); 
-          } catch (err) {} 
-          textArea.remove(); 
-          if (success) triggerSuccess(); 
-        } 
-      }; 
+      const handleCopy = (integerValue) => {
+        const triggerSuccess = () => {
+          setCopied(true);
+          setTimeout(() => setCopied(false), 2000);
+        };
+        if (navigator.clipboard && window.isSecureContext) {
+          navigator.clipboard.writeText(integerValue)
+            .then(triggerSuccess)
+            .catch(err => console.error("Clipboard API failed", err));
+        } else {
+          let success = false;
+          const textArea = document.createElement("textarea");
+          textArea.value = integerValue;
+          textArea.style.position = "fixed";
+          textArea.style.left = "-9999px";
+          textArea.style.top = "0";
+          document.body.appendChild(textArea);
+          textArea.focus();
+          textArea.select();
+          try {
+            success = document.execCommand("copy");
+          } catch (err) {}
+          textArea.remove();
+          if (success) triggerSuccess();
+        }
+      };
 
-      const pUnit = isMetric ? "Bar" : "PSI"; 
-      const dUnit = isMetric ? "m" : "ft"; 
-      const outUnit = isMetric ? "L/min" : "cu ft/min"; 
-      const stepSize = isMetric ? 10 : 100; 
-      const depthWarningThreshold = isMetric ? 20 : 65; 
-      const isDeepDive = avgDepth > depthWarningThreshold; 
-      const isPressureError = (startPressure !== '' && endPressure !== '' && Number(endPressure) >= Number(startPressure)); 
+      const pUnit = isMetric ? "Bar" : "PSI";
+      const dUnit = isMetric ? "m" : "ft";
+      const outUnit = isMetric ? "L/min" : "cu ft/min";
+      const stepSize = isMetric ? 10 : 100;
+      const depthWarningThreshold = isMetric ? 20 : 65;
+      const isDeepDive = avgDepth > depthWarningThreshold;
+      const isPressureError = (startPressure !== '' && endPressure !== '' && Number(endPressure) >= Number(startPressure));
 
-      const renderCalculationDetails = () => { 
-        if (!showCalc || !sacRate) return null; 
-        let calcLine = ''; 
-        if (isMetric) { 
-          const deltaP = startPressure - endPressure; 
-          const ambientP = (avgDepth / 10) + 1; 
-          calcLine = `(${deltaP}×${tankVolume}×${tanks}) ÷ (${diveTime}×${ambientP.toFixed(2)}) = ${sacRate.toFixed(2)}`; 
-        } else { 
-          const tf = (tankVolume / workingPressure).toFixed(2); 
-          const deltaP = startPressure - endPressure; 
-          const ambientP = (avgDepth / 33) + 1; 
-          calcLine = `(${deltaP}×${tf}×${tanks}) ÷ (${diveTime}×${ambientP.toFixed(2)}) = ${sacRate.toFixed(2)}`; 
-        } 
-        return ( 
-          <div className="mt-4 w-full flex justify-center items-center"> 
-            <span className="text-[17px] sm:text-[19px] font-light font-mono text-gray-700 tracking-tighter whitespace-nowrap"> 
-              {calcLine} 
-            </span> 
-          </div> 
-        ); 
-      }; 
+      const selectClass = "field w-full rounded-xl border border-abyss-900/10 bg-white text-abyss-900 font-semibold px-3 py-2.5 text-sm";
+      const smallInputClass = "field w-full rounded-xl border border-abyss-900/10 bg-white text-abyss-900 font-mono tabular px-2.5 py-2 text-sm placeholder:text-abyss-800/35";
 
-      const renderOutput = () => { 
-        if (isPressureError) return <p className="text-red-500 font-semibold mt-3 text-center text-sm">Please fix pressure values to calculate.</p>; 
-        if (!sacRate) return <p className="text-gray-500 italic mt-3 text-center text-sm">Enter dive details to calculate.</p>; 
-        const sacString = sacRate.toFixed(2); 
-        const [intPart, decPart] = sacString.split('.'); 
-        
-        return ( 
-          <div className="mt-5 flex flex-col items-center"> 
-            <h3 className="text-base font-semibold text-gray-700 mb-1.5">Surface Air Consumption</h3> 
-            <div className="flex items-center justify-center font-mono mt-1 w-full gap-2.5"> 
-              
-              {/* GREEN COPY BUTTON */}
-              <button 
-                onClick={() => handleCopy(intPart)} 
-                className="border-[3px] border-green-500 rounded-2xl px-5 py-2.5 bg-green-50 hover:bg-green-100 active:bg-green-200 transition-colors duration-150 shadow-sm flex items-center space-x-2 text-green-900" 
-                title="Click to copy whole number" 
-              > 
-                <span className="material-symbols-rounded text-[22px] text-green-600">content_copy</span> 
-                <span className="leading-none text-4xl font-black">{intPart}</span> 
-              </button> 
-              
-              {/* SMALLER DECIMALS */}
-              <div className="flex items-center text-gray-400 gap-1.5"> 
-                <span className="text-xl font-bold">.{decPart} <span className="text-sm font-medium text-gray-500 ml-0.5">{outUnit}</span></span> 
-                
-                <button onClick={() => setShowInfo(!showInfo)} className="p-1.5 bg-gray-100 rounded-full text-gray-400 hover:text-green-600 active:bg-green-100 transition-colors flex items-center justify-center relative" > 
-                  <span className="material-symbols-rounded text-lg block">info</span> 
-                  {showInfo && ( 
-                    <div className="absolute bottom-full right-0 mb-3 w-60 p-3 bg-gray-900/95 text-white text-xs rounded-xl shadow-2xl z-50 backdrop-blur-md border border-gray-700 font-sans normal-case tracking-normal text-left"> 
-                      <div className="flex justify-between items-start mb-1.5"> 
-                        <p className="font-bold text-green-400">Copying Instructions</p> 
-                        <button onClick={() => setShowInfo(false)} className="text-gray-400 hover:text-white transition-colors"> 
-                          <span className="material-symbols-rounded text-xs block">close</span> 
-                        </button> 
-                      </div> 
-                      <p className="text-gray-200 leading-relaxed">The SAC is usually calculated without numbers after the decimal point. Please click the green box once to copy.</p> 
-                      <div className="absolute top-full right-3 -mt-[1px] border-8 border-transparent border-t-gray-900/95"></div> 
-                    </div> 
-                  )} 
-                </button> 
-              </div> 
-            </div> 
-            
-            <div className="h-5 mt-2 text-sm flex items-center justify-center gap-2">
-              {copied && <span className="text-green-600 font-bold transition-all">Copied to clipboard! ✓</span>}
-              {saved && <span className="text-blue-600 font-bold transition-all">Dive logged! ✓</span>}
+      const renderCalculationDetails = () => {
+        if (!showCalc || !sacRate) return null;
+        let calcLine = '';
+        if (isMetric) {
+          const deltaP = startPressure - endPressure;
+          const ambientP = (avgDepth / 10) + 1;
+          calcLine = `(${deltaP}×${tankVolume}×${tanks}) ÷ (${diveTime}×${ambientP.toFixed(2)}) = ${sacRate.toFixed(2)}`;
+        } else {
+          const tf = (tankVolume / workingPressure).toFixed(2);
+          const deltaP = startPressure - endPressure;
+          const ambientP = (avgDepth / 33) + 1;
+          calcLine = `(${deltaP}×${tf}×${tanks}) ÷ (${diveTime}×${ambientP.toFixed(2)}) = ${sacRate.toFixed(2)}`;
+        }
+        return (
+          <div className="relative mt-3 w-full overflow-x-auto rounded-xl bg-black/25 border border-white/10 px-3 py-2.5 text-center fade-in">
+            <span className="text-[13px] sm:text-[14px] font-mono tabular text-reef-100/90 whitespace-nowrap">
+              {calcLine}
+            </span>
+          </div>
+        );
+      };
+
+      const renderOutput = () => {
+        if (isPressureError) return (
+          <div className="rounded-3xl bg-abyss-900 px-5 py-7 text-center">
+            <span className="material-symbols-rounded text-rose-300 text-[28px] block mb-1">error</span>
+            <p className="text-rose-200 font-semibold text-sm">Fix the pressure values to calculate.</p>
+          </div>
+        );
+        if (!sacRate) return (
+          <div className="rounded-3xl bg-abyss-900 px-5 py-7 text-center">
+            <span className="material-symbols-rounded text-reef-400/70 text-[28px] block mb-1">scuba_diving</span>
+            <p className="text-reef-100/70 text-sm">Enter your dive details to calculate.</p>
+          </div>
+        );
+        const sacString = sacRate.toFixed(2);
+        const [intPart, decPart] = sacString.split('.');
+
+        return (
+          <div className={`relative rounded-3xl bg-abyss-900 px-4 text-white transition-all duration-300 ${isAdvanced ? 'pt-3 pb-3' : 'pt-4 pb-4'}`}>
+            <div className="pointer-events-none absolute inset-0 rounded-3xl bg-[radial-gradient(80%_60%_at_50%_0%,rgba(0,168,204,0.28),transparent_70%)]"></div>
+            <div className={`relative flex items-center justify-between transition-all duration-300 ${isAdvanced ? 'mb-1' : 'mb-3'}`}>
+              <h3 className="text-[12px] font-semibold text-reef-200/80">Surface air consumption</h3>
+              <button
+                onClick={() => setShowInfo(!showInfo)}
+                aria-label="Copying instructions"
+                className="w-8 h-8 flex items-center justify-center rounded-full bg-white/10 text-reef-100/80 hover:text-white hover:bg-white/20 transition-colors relative"
+              >
+                <span className="material-symbols-rounded text-[18px] block">info</span>
+                {showInfo && (
+                  <div className="absolute bottom-full right-0 mb-3 w-64 p-3.5 bg-white text-abyss-900 text-xs rounded-2xl card-shadow z-50 font-sans text-left pop-in">
+                    <div className="flex justify-between items-start mb-1.5">
+                      <p className="font-bold text-emerald-700">Copying instructions</p>
+                      <span onClick={(e) => { e.stopPropagation(); setShowInfo(false); }} className="text-abyss-800/40 hover:text-abyss-900 transition-colors cursor-pointer">
+                        <span className="material-symbols-rounded text-sm block">close</span>
+                      </span>
+                    </div>
+                    <p className="text-abyss-800/80 leading-relaxed font-medium">The SAC is usually logged without the decimals. Tap the green box once to copy the whole number.</p>
+                    <div className="absolute top-full right-3 -mt-[1px] border-8 border-transparent border-t-white"></div>
+                  </div>
+                )}
+              </button>
             </div>
+
+            <div className="relative flex items-end justify-center gap-3">
+              {/* GREEN COPY BUTTON */}
+              <button
+                onClick={() => handleCopy(intPart)}
+                className={`flex items-center gap-2.5 rounded-2xl px-5 ${isAdvanced ? 'py-1.5' : 'py-3'} border-2 transition-all active:scale-[0.97] ${copied ? 'bg-emerald-400 border-emerald-300 text-abyss-950' : 'bg-emerald-400/10 border-emerald-400/70 text-emerald-300 hover:bg-emerald-400/20'}`}
+                title="Click to copy whole number"
+              >
+                <span className="material-symbols-rounded text-[22px]">{copied ? 'check' : 'content_copy'}</span>
+                <span className={`font-mono tabular leading-none ${isAdvanced ? 'text-[44px]' : 'text-[56px]'} font-extrabold tracking-tighter transition-all duration-300`}>{intPart}</span>
+              </button>
+              <div className="flex flex-col pb-2 font-mono tabular">
+                <span className="text-2xl font-bold text-white/60 leading-none">.{decPart}</span>
+                <span className="text-[12px] font-medium text-reef-200/70 mt-1.5">{outUnit}</span>
+              </div>
+            </div>
+
+            <div className={`relative text-[13px] transition-all duration-300 ${isAdvanced ? 'h-4 mt-1' : 'h-5 mt-2.5'} flex items-center justify-center`} aria-live="polite">
+              {copied && <span className="text-emerald-300 font-semibold fade-in">Copied to clipboard</span>}
+              {!copied && saved && <span className="text-reef-200 font-semibold fade-in">Dive logged</span>}
+            </div>
+
             <button
               onClick={handleSaveDive}
               disabled={!sacRate}
-              className={`mt-2 px-5 py-2.5 rounded-xl font-bold flex items-center justify-center gap-2 shadow-md transition-all ${sacRate ? 'bg-blue-600 text-white hover:bg-blue-700 active:scale-95' : 'bg-gray-200 text-gray-400 cursor-not-allowed'}`}
+              className={`relative mt-2 w-full ${isAdvanced ? 'py-3' : 'py-3.5'} rounded-2xl font-bold flex items-center justify-center gap-2 bg-reef-500 text-white hover:bg-reef-400 active:scale-[0.98] transition-all shadow-[0_8px_18px_-10px_rgba(2,30,48,0.6)]`}
             >
-              <span className="material-symbols-rounded text-[20px]">save</span>
-              Log This Dive
-            </button> 
-            <div className="mt-2"> 
-              <label className="inline-flex items-center text-gray-500 text-xs cursor-pointer hover:text-green-600 transition-colors"> 
-                <input type="checkbox" checked={showCalc} onChange={(e) => setShowCalc(e.target.checked)} className="form-checkbox h-3.5 w-3.5 text-green-500 rounded border-gray-300 mr-1.5" /> 
-                <span>Show math behind the scenes</span> 
-              </label> 
-            </div> 
-            {renderCalculationDetails()} 
-          </div> 
-        ); 
-      }; 
+              <span className="material-symbols-rounded text-[20px]">{saved ? 'check_circle' : 'bookmark_add'}</span>
+              {saved ? 'Saved to history' : 'Log this dive'}
+            </button>
 
-      return ( 
-        <div className="w-full flex flex-col items-center"> 
-          <div className="w-full p-4 bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl border border-white/50"> 
-            
-            {/* ENLARGED MASCOT & SPACED HEADER */}
-            <div className="flex justify-between items-start mb-8"> 
-              <div className="flex items-center space-x-3.5"> 
-                <div className="w-20 h-20 bg-white rounded-2xl flex items-center justify-center shadow-inner border border-blue-200/60 flex-shrink-0 overflow-hidden"> 
-                  <img src="/logo.png" alt="Tank Buddy Mascot" className="w-full h-full object-cover" /> 
-                </div> 
-                <div className="flex flex-col items-start mt-1"> 
-                  <h1 className="text-3xl font-black text-blue-900 tracking-tight leading-none text-left">Tank Buddy</h1> 
-                  <h2 className="text-[11px] font-bold text-blue-500/80 tracking-widest uppercase mt-1.5 text-left">Dive SAC Calc</h2> 
-                </div> 
-              </div> 
-              
-              <div className="flex gap-2">
-                <button
-                  onClick={() => setShowHistory(true)}
-                  className="px-3 py-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 text-xs font-bold rounded-full shadow-sm active:scale-95 transition-all flex items-center gap-1.5 mt-1 relative"
-                >
-                  <span className="material-symbols-rounded text-[16px]">history</span>
-                  History
-                  {diveLogs.length > 0 && (
-                    <span className="absolute -top-1 -right-1 bg-blue-600 text-white text-[9px] font-bold rounded-full w-4 h-4 flex items-center justify-center">
-                      {diveLogs.length}
-                    </span>
-                  )}
-                </button>
-                <button
-                  onClick={() => setShowShare(true)}
-                  className="px-3 py-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 text-xs font-bold rounded-full shadow-sm active:scale-95 transition-all flex items-center gap-1.5 mt-1"
-                >
-                  <span className="material-symbols-rounded text-[16px]">share</span>
-                  Share
-                </button>
+            <label className={`relative ${isAdvanced ? 'mt-2' : 'mt-3'} flex items-center justify-center gap-2 text-reef-100/70 text-xs cursor-pointer hover:text-white transition-colors`}>
+              <input type="checkbox" checked={showCalc} onChange={(e) => setShowCalc(e.target.checked)} className="h-3.5 w-3.5 rounded accent-[#00a8cc]" />
+              <span>Show the math</span>
+            </label>
+            {renderCalculationDetails()}
+          </div>
+        );
+      };
+
+      return (
+        <div className="w-full flex flex-col items-center">
+
+          {/* HEADER */}
+          <header className={`w-full flex items-center justify-between px-1 transition-all duration-300 ${isAdvanced ? 'mb-2' : 'mb-4'}`}>
+            <div className={`flex items-center transition-all duration-300 ${isAdvanced ? 'gap-2.5' : 'gap-3'}`}>
+              <div className={`rounded-[18px] bg-white overflow-hidden shrink-0 card-shadow ring-1 ring-white/60 transition-all duration-300 ${isAdvanced ? 'w-10 h-10 rounded-[13px]' : 'w-14 h-14'}`}>
+                <img src="/logo.png" alt="Tank Buddy mascot, a smiling scuba tank holding a calculator" className="w-full h-full object-cover" />
               </div>
-            </div> 
-            
-            <div className="flex justify-center mb-4 p-0.5 bg-blue-50/50 rounded-2xl border border-blue-100"> 
-              <label className="relative inline-flex items-center cursor-pointer group scale-95"> 
-                <input type="checkbox" checked={isAdvanced} onChange={(e) => setIsAdvanced(e.target.checked)} className="sr-only" /> 
-                <div className={`w-12 h-7 bg-gray-200 rounded-full transition-colors duration-200 ease-in-out ${isAdvanced ? 'bg-blue-600' : ''}`}></div> 
-                <div className={`absolute left-0.5 top-0.5 w-6 h-6 bg-white rounded-full shadow-md transition-transform duration-200 ease-in-out ${isAdvanced ? 'translate-x-5' : ''}`}></div> 
-                <span className="ml-2.5 text-base font-black text-blue-900 tracking-tight group-hover:text-blue-700 transition-colors flex items-center"> 
-                  <span className="material-symbols-rounded icon-align text-blue-700 text-[16px]">settings</span> Advanced Diver 
-                </span> 
-              </label> 
-            </div> 
-            
-            <div className="space-y-3.5"> 
-              {isAdvanced && ( 
-                <div className="flex space-x-2.5 p-3.5 bg-gray-50 rounded-2xl border border-gray-200 shadow-inner"> 
-                  <div className="flex-1"> 
-                    <label className="flex items-center text-[10px] font-bold text-gray-500 uppercase tracking-wide mb-1.5"><span className="material-symbols-rounded icon-align">propane</span> Tanks</label> 
-                    <select value={tanks} onChange={(e) => setTanks(Number(e.target.value))} className="w-full rounded-lg border-gray-300 shadow-sm p-2 border bg-white text-gray-800 text-sm"> 
-                      <option value={1}>1 Tank</option>
-                      <option value={2}>2 Tanks (Twin/SM)</option>
-                      <option value={3}>3 Tanks</option>
-                      <option value={4}>4 Tanks</option> 
-                    </select> 
-                  </div> 
-                  <div className="flex-1"> 
-                    <label className="flex items-center text-[10px] font-bold text-gray-500 uppercase tracking-wide mb-1.5"><span className="material-symbols-rounded icon-align">view_in_ar</span> Vol ({isMetric ? 'Liters' : 'CuFt'})</label> 
-                    <select value={volMode === 'custom' ? 'other' : (isMetric ? tankVolume : `${tankVolume}-${workingPressure}`)} onChange={handleVolChange} className={`w-full rounded-lg border-gray-300 shadow-sm p-2 border bg-white text-gray-800 ${volMode === 'custom' ? 'mb-1.5 text-xs' : 'text-sm'}`}> 
-                      {isMetric ? (
-                        <><option value={10}>10 L</option><option value={11}>11 L</option><option value={11.1}>11.1 L (AL80)</option><option value={12}>12 L</option><option value={15}>15 L</option></>
-                      ) : (
-                        <><option value="80-3000">AL 80 (3000psi)</option><option value="100-3442">HP 100 (3442psi)</option><option value="117-3442">HP 117 (3442psi)</option><option value="133-3442">HP 133 (3442psi)</option></>
-                      )} 
-                      <option value="other">Other...</option> 
-                    </select> 
-                    {volMode === 'custom' && ( 
-                      <div className="flex space-x-1.5"> 
-                        <input type="number" placeholder={isMetric ? "Liters" : "Vol"} value={tankVolume} onChange={(e) => setTankVolume(e.target.value === '' ? '' : Number(e.target.value))} className="w-full rounded-lg border-gray-300 shadow-sm p-1.5 border bg-white text-gray-800 text-xs placeholder-gray-400" /> 
+              <div className="flex flex-col">
+                <h1 className={`font-display font-bold text-white tracking-tight leading-none drop-shadow-sm transition-all duration-300 ${isAdvanced ? 'text-[20px]' : 'text-[28px]'}`}>Tank Buddy</h1>
+                <p className={`text-[13px] font-medium text-white/75 overflow-hidden transition-all duration-300 ${isAdvanced ? 'max-h-0 opacity-0 mt-0' : 'max-h-5 opacity-100 mt-1'}`}>Dive SAC calculator</p>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setShowHistory(true)}
+                aria-label="Dive history"
+                className={`relative flex items-center justify-center rounded-full transition-all duration-300 ${isAdvanced ? 'w-9 h-9' : 'w-11 h-11'} bg-white/15 hover:bg-white/25 border border-white/25 text-white backdrop-blur-md active:scale-95`}
+              >
+                <span className="material-symbols-rounded text-[22px]">history</span>
+                {diveLogs.length > 0 && (
+                  <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 bg-white text-abyss-900 text-[10px] font-extrabold rounded-full flex items-center justify-center tabular shadow">
+                    {diveLogs.length}
+                  </span>
+                )}
+              </button>
+              <button
+                onClick={() => setShowShare(true)}
+                aria-label="Share Tank Buddy"
+                className={`flex items-center justify-center rounded-full transition-all duration-300 ${isAdvanced ? 'w-9 h-9' : 'w-11 h-11'} bg-white/15 hover:bg-white/25 border border-white/25 text-white backdrop-blur-md active:scale-95`}
+              >
+                <span className="material-symbols-rounded text-[22px]">ios_share</span>
+              </button>
+            </div>
+          </header>
+
+          <main className={`w-full bg-[#f6fbfd] rounded-[28px] card-shadow border border-white/70 transition-all duration-300 ${isAdvanced ? 'p-3' : 'p-4 sm:p-5'}`}>
+
+            {/* ADVANCED TOGGLE */}
+            <label className={`flex items-center justify-between gap-3 px-3.5 rounded-2xl border cursor-pointer select-none transition-all duration-300 ${isAdvanced ? 'py-2 mb-3 bg-reef-500 border-reef-600' : 'py-3 mb-4 bg-white border-abyss-900/10'}`}>
+              <span className="flex items-center gap-2.5">
+                <span className={`w-9 h-9 rounded-xl flex items-center justify-center transition-colors duration-300 ${isAdvanced ? 'bg-white/20 text-white' : 'bg-reef-50 text-reef-700'}`}>
+                  <span className="material-symbols-rounded text-[20px]">tune</span>
+                </span>
+                <span className="flex flex-col">
+                  <span className={`font-display text-[16px] font-semibold leading-tight transition-colors duration-300 ${isAdvanced ? 'text-white' : 'text-abyss-900'}`}>Advanced diver</span>
+                  <span className={`text-[12px] overflow-hidden transition-all duration-300 ${isAdvanced ? 'max-h-0 opacity-0 text-white/80' : 'max-h-5 opacity-100 text-abyss-800/55'}`}>Twinsets, tank size and custom volumes</span>
+                </span>
+              </span>
+              <input type="checkbox" checked={isAdvanced} onChange={(e) => setIsAdvanced(e.target.checked)} className="sr-only" />
+              <span className={`relative w-12 h-7 shrink-0 rounded-full transition-colors duration-200 ${isAdvanced ? 'bg-abyss-900' : 'bg-abyss-900/15'}`}>
+                <span className={`absolute left-0.5 top-0.5 w-6 h-6 bg-white rounded-full shadow transition-transform duration-200 ${isAdvanced ? 'translate-x-5' : ''}`}></span>
+              </span>
+            </label>
+
+            <div className={`transition-all duration-300 ${isAdvanced ? 'space-y-2.5' : 'space-y-4'}`}>
+              {isAdvanced && (
+                <div className="grid grid-cols-2 gap-2.5 p-2.5 rounded-2xl bg-reef-50/70 border border-reef-100 fade-in">
+                  <label className="block">
+                    <FieldLabel icon="propane" iconClass="text-reef-700" tight>Tanks</FieldLabel>
+                    <select value={tanks} onChange={(e) => setTanks(Number(e.target.value))} className={selectClass}>
+                      <option value={1}>1 tank</option>
+                      <option value={2}>2 tanks (twin/SM)</option>
+                      <option value={3}>3 tanks</option>
+                      <option value={4}>4 tanks</option>
+                    </select>
+                  </label>
+                  <div>
+                    <label className="block">
+                      <FieldLabel icon="view_in_ar" iconClass="text-reef-700" tight>Volume ({isMetric ? 'liters' : 'cu ft'})</FieldLabel>
+                      <select value={volMode === 'custom' ? 'other' : (isMetric ? tankVolume : `${tankVolume}-${workingPressure}`)} onChange={handleVolChange} className={`${selectClass} ${volMode === 'custom' ? 'mb-1.5' : ''}`}>
+                        {isMetric ? (
+                          <><option value={10}>10 L</option><option value={11}>11 L</option><option value={11.1}>11.1 L (AL80)</option><option value={12}>12 L</option><option value={15}>15 L</option></>
+                        ) : (
+                          <><option value="80-3000">AL 80 (3000psi)</option><option value="100-3442">HP 100 (3442psi)</option><option value="117-3442">HP 117 (3442psi)</option><option value="133-3442">HP 133 (3442psi)</option></>
+                        )}
+                        <option value="other">Other...</option>
+                      </select>
+                    </label>
+                    {volMode === 'custom' && (
+                      <div className="flex gap-1.5">
+                        <input type="number" inputMode="decimal" aria-label="Tank volume" placeholder={isMetric ? "Liters" : "Vol"} value={tankVolume} onChange={(e) => setTankVolume(e.target.value === '' ? '' : Number(e.target.value))} className={smallInputClass} />
                         {!isMetric && (
-                          <input type="number" placeholder="WP (psi)" value={workingPressure} onChange={(e) => setWorkingPressure(e.target.value === '' ? '' : Number(e.target.value))} className="w-full rounded-lg border-gray-300 shadow-sm p-1.5 border bg-white text-gray-800 text-xs placeholder-gray-400" />
-                        )} 
-                      </div> 
-                    )} 
-                  </div> 
-                </div> 
-              )} 
-              
-              {/* BIGGER STEPPER BUTTONS */}
-              <div className="w-full"> 
-                <label className="flex items-center text-[10px] font-bold text-gray-500 uppercase tracking-wide mb-1.5"><span className="material-symbols-rounded icon-align text-emerald-600">speed</span> Start ({pUnit})</label> 
-                <div className="flex items-center space-x-1.5"> 
-                  <button onClick={() => setStartPressure(Math.max(0, (Number(startPressure) || 0) - stepSize))} className="px-5 py-3 bg-gray-200 hover:bg-gray-300 active:bg-gray-400 text-gray-700 rounded-xl font-black text-xl transition-all shadow-sm">-{stepSize}</button> 
-                  <input type="number" value={startPressure} onChange={(e) => setStartPressure(e.target.value === '' ? '' : Number(e.target.value))} className={`w-full rounded-lg shadow-sm p-2 border text-xl font-semibold text-center transition-colors ${isPressureError ? 'border-red-400 bg-red-50 text-red-900 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 bg-gray-50 text-gray-800'}`} /> 
-                  <button onClick={() => setStartPressure((Number(startPressure) || 0) + stepSize)} className="px-5 py-3 bg-gray-200 hover:bg-gray-300 active:bg-gray-400 text-gray-700 rounded-xl font-black text-xl transition-all shadow-sm">+{stepSize}</button> 
-                </div> 
-              </div> 
-              
-              <div className="w-full"> 
-                <label className="flex items-center text-[10px] font-bold text-gray-500 uppercase tracking-wide mb-1.5"><span className="material-symbols-rounded icon-align text-rose-600">speed</span> End ({pUnit})</label> 
-                <div className="flex items-center space-x-1.5"> 
-                  <button onClick={() => setEndPressure(Math.max(0, (Number(endPressure) || 0) - stepSize))} className="px-5 py-3 bg-gray-200 hover:bg-gray-300 active:bg-gray-400 text-gray-700 rounded-xl font-black text-xl transition-all shadow-sm">-{stepSize}</button> 
-                  <input type="number" value={endPressure} onChange={(e) => setEndPressure(e.target.value === '' ? '' : Number(e.target.value))} className={`w-full rounded-lg shadow-sm p-2 border text-xl font-semibold text-center transition-colors ${isPressureError ? 'border-red-400 bg-red-50 text-red-900 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 bg-gray-50 text-gray-800'}`} /> 
-                  <button onClick={() => setEndPressure((Number(endPressure) || 0) + stepSize)} className="px-5 py-3 bg-gray-200 hover:bg-gray-300 active:bg-gray-400 text-gray-700 rounded-xl font-black text-xl transition-all shadow-sm">+{stepSize}</button> 
-                </div> 
-                {isPressureError && <p className="text-[10px] text-red-600 mt-1 font-semibold pl-1">⚠️ End pressure cannot be higher than Start</p>} 
-              </div> 
-              
-              <div className="flex space-x-3 mt-2"> 
-                <div className={`flex-1 p-2.5 rounded-xl border shadow-sm transition-colors ${isDeepDive ? 'bg-yellow-50 border-yellow-300' : 'bg-gray-50 border-gray-200'}`}> 
-                  <label className="flex items-center text-[10px] font-bold text-gray-500 uppercase tracking-wide mb-1.5"> 
-                    <span className="material-symbols-rounded icon-align text-blue-500 text-[14px]">waves</span> Avg Depth ({dUnit}) 
-                  </label> 
-                  <input type="number" value={avgDepth} onChange={(e) => setAvgDepth(e.target.value === '' ? '' : Number(e.target.value))} className={`w-full rounded-lg shadow-sm p-2 border text-lg font-semibold text-center transition-colors ${isDeepDive ? 'border-yellow-400 bg-yellow-50 text-yellow-900 focus:border-yellow-500 focus:ring-yellow-500' : 'border-gray-300 bg-white text-gray-800'}`} /> 
-                  {isDeepDive && <p className="text-[9px] text-yellow-600 mt-1.5 font-bold text-center">⚠️ Deep profile</p>} 
-                </div> 
-                <div className="flex-1 p-2.5 rounded-xl border border-gray-200 bg-gray-50 shadow-sm"> 
-                  <label className="flex items-center text-[10px] font-bold text-gray-500 uppercase tracking-wide mb-1.5"> 
-                    <span className="material-symbols-rounded icon-align text-indigo-500 text-[14px]">timer</span> Time (min) 
-                  </label> 
-                  <input type="number" value={diveTime} onChange={(e) => setDiveTime(e.target.value === '' ? '' : Number(e.target.value))} className="w-full rounded-lg border-gray-300 shadow-sm p-2 border bg-white text-gray-800 text-lg font-semibold text-center" /> 
-                </div> 
-              </div> 
-            </div> 
-            
-            <hr className="my-5 border-gray-200" /> 
-            {renderOutput()} 
-          </div> 
-          
+                          <input type="number" inputMode="numeric" aria-label="Working pressure" placeholder="WP (psi)" value={workingPressure} onChange={(e) => setWorkingPressure(e.target.value === '' ? '' : Number(e.target.value))} className={smallInputClass} />
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              <Stepper label="Start pressure" icon="speed" iconClass="text-emerald-600 -scale-x-100" value={startPressure} onChange={setStartPressure} step={stepSize} unit={pUnit} error={isPressureError} compact={isAdvanced} />
+
+              <div>
+                <Stepper label="End pressure" icon="speed" iconClass="text-rose-500" value={endPressure} onChange={setEndPressure} step={stepSize} unit={pUnit} error={isPressureError} compact={isAdvanced} />
+                {isPressureError && (
+                  <p className="flex items-center gap-1 text-[12px] text-rose-600 mt-1.5 font-semibold pl-1">
+                    <span className="material-symbols-rounded text-[15px]">warning</span>
+                    End pressure must be lower than start
+                  </p>
+                )}
+              </div>
+
+              <div className="grid grid-cols-2 gap-2.5">
+                <label className={`block rounded-2xl border transition-all duration-300 ${isAdvanced ? 'px-3 py-2' : 'p-3'} ${isDeepDive ? 'bg-amber-50 border-amber-300' : 'bg-white border-abyss-900/10'}`}>
+                  <FieldLabel icon="waves" iconClass="text-reef-600" tight={isAdvanced}>Avg depth</FieldLabel>
+                  <div className="flex items-baseline gap-1">
+                    <input type="number" inputMode="decimal" value={avgDepth} onChange={(e) => setAvgDepth(e.target.value === '' ? '' : Number(e.target.value))} className={`field w-full min-w-0 rounded-lg border border-transparent bg-transparent font-mono tabular text-[26px] font-bold tracking-tight px-1 ${isDeepDive ? 'text-amber-900' : 'text-abyss-900'}`} />
+                    <span className="text-[13px] font-semibold text-abyss-800/45">{dUnit}</span>
+                  </div>
+                  {isDeepDive && (
+                    <p className="flex items-center gap-1 text-[11px] text-amber-700 mt-1 font-bold">
+                      <span className="material-symbols-rounded text-[14px]">warning</span> Deep profile
+                    </p>
+                  )}
+                </label>
+                <label className={`block rounded-2xl border border-abyss-900/10 bg-white transition-all duration-300 ${isAdvanced ? 'px-3 py-2' : 'p-3'}`}>
+                  <FieldLabel icon="timer" iconClass="text-reef-600" tight={isAdvanced}>Bottom time</FieldLabel>
+                  <div className="flex items-baseline gap-1">
+                    <input type="number" inputMode="numeric" value={diveTime} onChange={(e) => setDiveTime(e.target.value === '' ? '' : Number(e.target.value))} className="field w-full min-w-0 rounded-lg border border-transparent bg-transparent font-mono tabular text-[26px] font-bold tracking-tight text-abyss-900 px-1" />
+                    <span className="text-[13px] font-semibold text-abyss-800/45">min</span>
+                  </div>
+                </label>
+              </div>
+            </div>
+
+            <div className={`transition-all duration-300 ${isAdvanced ? 'mt-3' : 'mt-5'}`}>
+              {renderOutput()}
+            </div>
+          </main>
+
           <SupportFooter />
 
-          <div className="mt-5 text-center px-4"> 
-            <p className="text-[11px] text-white/90 font-medium mb-1 tracking-wide"> 
-              Built by Ben Kaufman <span className="mx-1 opacity-50">•</span> Made with AI 
-            </p> 
-            <p className="text-[9px] text-white/70 leading-relaxed max-w-xs mx-auto"> 
-              Disclaimer: This tool is for informational purposes only. Always independently verify calculations and finalize dive plans before entering the water. 
-            </p> 
-          </div> 
+          <footer className="mt-5 text-center px-4">
+            <p className="text-[12px] text-white/85 font-medium mb-1.5">
+              Built by Ben Kaufman <span className="mx-1 opacity-50">•</span> Made with AI
+            </p>
+            <p className="text-[11px] text-white/55 leading-relaxed max-w-xs mx-auto" style={{ textWrap: 'pretty' }}>
+              Disclaimer: This tool is for informational purposes only. Always independently verify calculations and finalize dive plans before entering the water.
+            </p>
+          </footer>
 
           {/* --- HISTORY MODAL --- */}
           {showHistory && (
-            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300">
-              <div className="w-full max-w-md bg-white rounded-3xl p-6 shadow-2xl animate-in fade-in zoom-in duration-200 max-h-[90vh] flex flex-col">
-
-                <div className="w-full flex justify-between items-start mb-4">
-                  <div className="flex flex-col">
-                    <h3 className="text-xl font-black text-blue-900 leading-none">Dive History</h3>
-                    <p className="text-[10px] text-blue-500 font-bold uppercase tracking-widest mt-1">
-                      {diveLogs.length} {diveLogs.length === 1 ? 'Log' : 'Logs'}
-                    </p>
+            <ModalShell
+              onClose={() => setShowHistory(false)}
+              title="Dive history"
+              subtitle={`${diveLogs.length} ${diveLogs.length === 1 ? 'logged dive' : 'logged dives'}`}
+            >
+              <div className="flex-1 overflow-y-auto space-y-2.5 mb-4 -mx-1 px-1">
+                {diveLogs.length === 0 ? (
+                  <div className="text-center py-12 px-6 rounded-2xl bg-reef-50/60 border border-dashed border-reef-200">
+                    <span className="material-symbols-rounded text-5xl text-reef-400 block mb-3">scuba_diving</span>
+                    <p className="font-display text-abyss-900 font-semibold text-lg">No dives logged yet</p>
+                    <p className="text-[13px] text-abyss-800/60 mt-1">Calculate a SAC rate, then tap "Log this dive".</p>
                   </div>
-                  <button
-                    onClick={() => setShowHistory(false)}
-                    className="p-1 text-gray-400 hover:text-gray-700 bg-gray-100 rounded-full active:scale-95 transition-all"
-                  >
-                    <span className="material-symbols-rounded text-[18px] block">close</span>
-                  </button>
-                </div>
+                ) : (
+                  diveLogs.map((log) => {
+                    const date = new Date(log.timestamp);
+                    const dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                    const timeStr = date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+                    const pUnit = log.isMetric ? 'bar' : 'psi';
+                    const dUnit = log.isMetric ? 'm' : 'ft';
+                    const sacUnit = log.isMetric ? 'L/min' : 'cu ft/min';
 
-                <div className="flex-1 overflow-y-auto space-y-3 mb-4">
-                  {diveLogs.length === 0 ? (
-                    <div className="text-center py-12">
-                      <span className="material-symbols-rounded text-6xl text-gray-300 block mb-3">scuba_diving</span>
-                      <p className="text-gray-500 font-medium">No dives logged yet</p>
-                      <p className="text-xs text-gray-400 mt-1">Calculate a SAC rate and click "Log This Dive"</p>
-                    </div>
-                  ) : (
-                    diveLogs.map((log) => {
-                      const date = new Date(log.timestamp);
-                      const dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-                      const timeStr = date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-                      const pUnit = log.isMetric ? 'bar' : 'psi';
-                      const dUnit = log.isMetric ? 'm' : 'ft';
-                      const sacUnit = log.isMetric ? 'L/min' : 'cu ft/min';
-
-                      return (
-                        <div key={log.id} className="bg-gray-50 rounded-2xl p-4 border border-gray-200 shadow-sm">
-                          <div className="flex justify-between items-start mb-2">
-                            <div>
-                              <p className="text-2xl font-black text-blue-900">{log.sacRate} <span className="text-sm font-medium text-gray-500">{sacUnit}</span></p>
-                              <p className="text-[10px] text-gray-500 font-medium">{dateStr} at {timeStr}</p>
-                            </div>
-                            <button
-                              onClick={() => handleDeleteLog(log.id)}
-                              className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-full active:scale-95 transition-all"
-                              title="Delete log"
-                            >
-                              <span className="material-symbols-rounded text-[18px] block">delete</span>
-                            </button>
+                    return (
+                      <div key={log.id} className="rounded-2xl p-3.5 bg-[#f6fbfd] border border-abyss-900/[0.08]">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <p className="font-mono tabular text-[26px] font-extrabold text-abyss-900 leading-none tracking-tight">{log.sacRate} <span className="font-sans text-[12px] font-semibold text-abyss-800/50 tracking-normal">{sacUnit}</span></p>
+                            <p className="text-[12px] text-abyss-800/55 font-medium mt-1.5">{dateStr} · {timeStr}</p>
                           </div>
-                          <div className="grid grid-cols-2 gap-2 text-xs mt-3">
-                            <div className="bg-white rounded-lg p-2 border border-gray-200">
-                              <p className="text-gray-500 font-semibold mb-0.5">Depth</p>
-                              <p className="text-gray-800 font-bold">{log.avgDepth} {dUnit}</p>
-                            </div>
-                            <div className="bg-white rounded-lg p-2 border border-gray-200">
-                              <p className="text-gray-500 font-semibold mb-0.5">Time</p>
-                              <p className="text-gray-800 font-bold">{log.diveTime} min</p>
-                            </div>
-                            <div className="bg-white rounded-lg p-2 border border-gray-200">
-                              <p className="text-gray-500 font-semibold mb-0.5">Start/End</p>
-                              <p className="text-gray-800 font-bold">{log.startPressure}/{log.endPressure} {pUnit}</p>
-                            </div>
-                            <div className="bg-white rounded-lg p-2 border border-gray-200">
-                              <p className="text-gray-500 font-semibold mb-0.5">Tank</p>
-                              <p className="text-gray-800 font-bold">{log.tanks}x {log.tankVolume}{log.isMetric ? 'L' : 'cf'}</p>
-                            </div>
-                          </div>
+                          <button
+                            onClick={() => handleDeleteLog(log.id)}
+                            className="w-9 h-9 flex items-center justify-center text-abyss-800/40 hover:text-rose-600 hover:bg-rose-50 rounded-full active:scale-95 transition-all"
+                            title="Delete log"
+                            aria-label="Delete log"
+                          >
+                            <span className="material-symbols-rounded text-[19px] block">delete</span>
+                          </button>
                         </div>
-                      );
-                    })
-                  )}
-                </div>
-
-                {diveLogs.length > 0 && (
-                  <button
-                    onClick={handleClearAll}
-                    className="w-full py-2.5 bg-red-50 text-red-600 hover:bg-red-100 rounded-xl font-bold text-sm active:scale-95 transition-all border border-red-200"
-                  >
-                    Clear All History
-                  </button>
+                        <dl className="grid grid-cols-2 gap-1.5 text-[11px] mt-3">
+                          {[
+                            ['Depth', `${log.avgDepth} ${dUnit}`],
+                            ['Time', `${log.diveTime} min`],
+                            ['Start / end', `${log.startPressure} / ${log.endPressure} ${pUnit}`],
+                            ['Tank', `${log.tanks}× ${log.tankVolume}${log.isMetric ? 'L' : 'cf'}`],
+                          ].map(([k, v]) => (
+                            <div key={k} className="bg-white rounded-xl px-2.5 py-1.5 border border-abyss-900/[0.06]">
+                              <dt className="text-abyss-800/50 font-semibold">{k}</dt>
+                              <dd className="text-abyss-900 font-bold font-mono tabular mt-0.5 truncate">{v}</dd>
+                            </div>
+                          ))}
+                        </dl>
+                      </div>
+                    );
+                  })
                 )}
-
               </div>
-            </div>
+
+              {diveLogs.length > 0 && (
+                <button
+                  onClick={handleClearAll}
+                  className="w-full py-3 text-rose-600 hover:bg-rose-50 rounded-2xl font-bold text-sm active:scale-[0.98] transition-all border border-rose-200"
+                >
+                  Clear all history
+                </button>
+              )}
+            </ModalShell>
           )}
 
           {/* --- THE UNIVERSAL SHARE MODAL (WITH IMAGE FIX) --- */}
           {showShare && (
-            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300">
-              <div className="w-full max-w-xs bg-white rounded-3xl p-6 flex flex-col items-center shadow-2xl animate-in fade-in zoom-in duration-200">
-
-                <div className="w-full flex justify-between items-start mb-2">
-                  <div className="flex flex-col">
-                    <h3 className="text-xl font-black text-blue-900 leading-none">Buddy-Up</h3>
-                    <p className="text-[10px] text-blue-500 font-bold uppercase tracking-widest mt-1">Share Tank Buddy</p>
-                  </div>
-                  <button
-                    onClick={() => setShowShare(false)}
-                    className="p-1 text-gray-400 hover:text-gray-700 bg-gray-100 rounded-full active:scale-95 transition-all"
-                  >
-                    <span className="material-symbols-rounded text-[18px] block">close</span>
-                  </button>
+            <ModalShell onClose={() => setShowShare(false)} title="Buddy up" subtitle="Share Tank Buddy" maxWidth="max-w-xs">
+              <div className="flex flex-col items-center">
+                <div className="rounded-3xl bg-white border border-abyss-900/10 card-shadow mb-5 mt-1 w-56 h-56 flex items-center justify-center overflow-hidden p-2">
+                  <img src="/qr.svg" alt="QR code linking to tankbuddy.net" className="w-full h-full object-contain" />
                 </div>
-
-                <div className="bg-white rounded-xl border border-gray-200 shadow-sm mb-6 mt-4 w-48 h-48 flex items-center justify-center overflow-hidden p-3 animate-in fade-in duration-500 delay-150">
-                  <img src="/qr.png" alt="Tank Buddy QR Code" className="w-full h-full object-contain" />
-                </div>
+                <p className="text-[13px] text-abyss-800/60 text-center mb-4">Have your buddy scan the code, or send the link.</p>
 
                 <button
                   onClick={async () => {
@@ -609,27 +736,26 @@
                       alert("Native sharing isn't supported on this browser. Have your buddy scan the QR code instead!");
                     }
                   }}
-                  className="w-full py-3.5 bg-blue-600 text-white rounded-xl font-bold flex items-center justify-center gap-2 shadow-md hover:bg-blue-700 active:scale-95 transition-all"
+                  className="w-full py-3.5 bg-reef-500 text-white rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-reef-600 active:scale-[0.98] transition-all shadow-[0_8px_18px_-10px_rgba(2,30,48,0.6)]"
                 >
                   <span className="material-symbols-rounded text-[20px]">send</span>
-                  Send Link
+                  Send link
                 </button>
-
               </div>
-            </div>
+            </ModalShell>
           )}
-        </div> 
-      ); 
-    }; 
-    
-    const root = ReactDOM.createRoot(document.getElementById('root')); 
-    root.render(<AirConsumptionCalc />); 
-  </script> 
-  
-  <script> 
-    if ('serviceWorker' in navigator) { 
-      window.addEventListener('load', () => { 
-        navigator.serviceWorker.register('/sw.js') 
+        </div>
+      );
+    };
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<AirConsumptionCalc />);
+  </script>
+
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js')
           .then(reg => {
             console.log('Service Worker registered!', reg);
             reg.addEventListener('updatefound', () => {
@@ -641,9 +767,9 @@
                 }
               });
             });
-          }) 
-          .catch(err => console.error('Service Worker registration failed:', err)); 
-          
+          })
+          .catch(err => console.error('Service Worker registration failed:', err));
+
         let refreshing = false;
         navigator.serviceWorker.addEventListener('controllerchange', () => {
           if (!refreshing) {
@@ -652,8 +778,8 @@
             window.location.reload();
           }
         });
-      }); 
-    } 
-  </script> 
-</body> 
+      });
+    }
+  </script>
+</body>
 </html>

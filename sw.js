@@ -1,12 +1,13 @@
 self.skipWaiting();
-const CACHE_NAME = 'tank-buddy-v2.5';
+const CACHE_NAME = 'tank-buddy-v2.7';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
   '/manifest.json',
   '/logo.png',
   '/icon-192.png',
-  '/icon-512.png'
+  '/icon-512.png',
+  '/qr.svg'
 ];
 
 self.addEventListener('install', (event) => {
