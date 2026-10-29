@@ -241,6 +241,75 @@
       );
     };
 
+    // --- WHY SAC MATTERS (collapsible explainer) ---
+    const WhySac = () => {
+      const [open, setOpen] = useState(false);
+      const reasons = [
+        ['timer', 'Gas planning', 'Know how long a tank lasts at the depth you actually plan to dive, not just at the surface.'],
+        ['shield', 'Reserve', 'Work out your turn point ahead of time, so you head back with gas left and not a prayer.'],
+        ['group', 'Buddy matching', 'The heavier breather sets the turn time for the pair. Nobody is judging, it just keeps the maths honest.'],
+        ['trending_down', 'Progress', 'As you relax and your trim and buoyancy settle in, your number drops. Nice thing to watch.'],
+        ['monitor_heart', 'Early warning', 'A sudden spike can mean stress, cold or fatigue. Good reason to slow down and check in.'],
+      ];
+      const tips = ['Breathe slow and deep, no gasping', 'Get your trim flat so you slip through the water', 'Stay warm, shivering burns gas', 'Fin gently, glide more'];
+      return (
+        <section className="mt-5 w-full">
+          <button
+            type="button"
+            onClick={() => setOpen(!open)}
+            aria-expanded={open}
+            aria-controls="why-sac-panel"
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-full text-white/90 text-sm font-semibold bg-white/10 hover:bg-white/20 border border-white/20 backdrop-blur-md active:scale-[0.98] transition-all"
+          >
+            <span className="material-symbols-rounded text-[20px]">help</span>
+            <span className="flex-1 text-left">Why your SAC matters</span>
+            <span className={`material-symbols-rounded text-[22px] transition-transform duration-300 ${open ? 'rotate-180' : ''}`}>expand_more</span>
+          </button>
+          <div
+            id="why-sac-panel"
+            role="region"
+            aria-label="Why your SAC matters"
+            className={`grid transition-all duration-300 ease-out ${open ? 'grid-rows-[1fr] opacity-100 mt-3' : 'grid-rows-[0fr] opacity-0 mt-0'}`}
+            {...(open ? {} : { inert: '' })}
+          >
+            <div className="overflow-hidden">
+              <div className="bg-[#f6fbfd] rounded-[28px] card-shadow border border-white/70 p-5 text-abyss-900 font-sans text-[14px] leading-relaxed">
+                <p className="max-w-[65ch]">
+                  <span className="font-semibold">SAC</span> is how much gas you breathe per minute at the surface. Because it's normalised to one atmosphere, you can compare a shallow reef potter with a deep wall.
+                </p>
+                <h3 className="font-display font-semibold text-[15px] mt-4 mb-2">So why care?</h3>
+                <ul className="space-y-2.5">
+                  {reasons.map(([icon, head, body]) => (
+                    <li key={head} className="flex gap-3 max-w-[65ch]">
+                      <span className="material-symbols-rounded text-[20px] text-reef-600 mt-0.5 shrink-0" aria-hidden="true">{icon}</span>
+                      <span><span className="font-semibold">{head}.</span> {body}</span>
+                    </li>
+                  ))}
+                </ul>
+                <div className="mt-4 rounded-2xl bg-white border border-abyss-900/10 p-3.5">
+                  <p className="text-[12px] font-semibold uppercase tracking-wide text-abyss-800/60 mb-2">Quick example</p>
+                  <div className="font-mono text-[13px] tabular-nums space-y-1">
+                    <div>15 L/min x 3 bar (20 m) = <span className="font-semibold">45 L/min</span></div>
+                    <div>11 L x 200 bar = <span className="font-semibold">2,200 L</span></div>
+                    <div>Keep 50 bar back: 2,200 - 550 = <span className="font-semibold">1,650 L</span></div>
+                    <div>1,650 / 45 = <span className="font-semibold">~36 min</span> at 20 m</div>
+                  </div>
+                  <p className="mt-2 text-[13px] text-abyss-800/80 max-w-[65ch]">Bottom time on paper, before you count the trip down and the way back up. Plan around it, not right up to it.</p>
+                </div>
+                <h3 className="font-display font-semibold text-[15px] mt-4 mb-2">Bringing it down</h3>
+                <ul className="space-y-1.5 max-w-[65ch]">
+                  {tips.map((t) => (
+                    <li key={t} className="flex gap-2"><span className="text-reef-600" aria-hidden="true">&bull;</span><span>{t}</span></li>
+                  ))}
+                </ul>
+                <p className="mt-3 text-[13px] text-abyss-800/70 max-w-[65ch]">Don't chase a tiny number by holding your breath, though. Never skip breathing to look good on paper.</p>
+              </div>
+            </div>
+          </div>
+        </section>
+      );
+    };
+
     const AirConsumptionCalc = () => {
       // --- State ---
       const [isMetric, setIsMetric] = useState(true);
@@ -630,6 +699,8 @@
               {renderOutput()}
             </div>
           </main>
+
+          <WhySac />
 
           <SupportFooter />
 
