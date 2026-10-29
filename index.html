@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 
   <title>Tank Buddy - Easy to Use Dive SAC Calc</title>
   <meta name="description" content="An easy to use, lightning-fast, offline-first SAC calculator for scuba divers. Plan your gas consumption instantly on the dive boat.">
@@ -70,7 +70,7 @@
     .water-bg {
       background-color: #062436;
       background-image:
-        linear-gradient(180deg, rgba(4, 20, 31, 0) 0%, rgba(4, 20, 31, 0.55) 55%, rgba(4, 20, 31, 0.92) 100%),
+        linear-gradient(180deg, rgba(4, 20, 31, 0.2) 0%, rgba(4, 20, 31, 0.55) 55%, rgba(4, 20, 31, 0.92) 100%),
         linear-gradient(-45deg, #006994, #00a8cc, #20b2aa, #48d1cc);
       background-size: 100% 100%, 400% 400%;
       background-attachment: fixed;
@@ -98,7 +98,7 @@
       to { opacity: 1; transform: none; }
     }
     @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-    .pop-in { animation: popIn 0.28s cubic-bezier(0.2, 0.9, 0.3, 1.2) both; }
+    .pop-in { animation: popIn 0.28s cubic-bezier(0.16, 1, 0.3, 1) both; }
     .fade-in { animation: fadeIn 0.2s ease both; }
     @media (prefers-reduced-motion: reduce) {
       .water-bg, .bubble, .pop-in, .fade-in { animation: none; }
@@ -120,9 +120,17 @@
       padding-right: 2rem !important;
     }
     .field { transition: border-color 0.2s, box-shadow 0.2s, background-color 0.2s; }
-    .field:focus { outline: none; border-color: #00a8cc; box-shadow: 0 0 0 4px rgba(0, 168, 204, 0.18); }
-    button:focus-visible, a:focus-visible, label:has(input.sr-only:focus-visible) { outline: 2px solid #00a8cc; outline-offset: 2px; }
-    .card-shadow { box-shadow: 0 1px 0 rgba(255, 255, 255, 0.7) inset, 0 30px 60px -20px rgba(2, 30, 48, 0.55), 0 12px 24px -12px rgba(2, 30, 48, 0.35); }
+    /* Two-tone focus ring (white gap + deep teal) reads on cyan water, white cards and the dark result panel */
+    .field:focus { outline: none; border-color: #0089ab; }
+    button:focus-visible, a:focus-visible, .field:focus-visible, input[type=checkbox]:focus-visible, label:has(input.sr-only:focus-visible) {
+      outline: 2px solid #006994; outline-offset: 2px; box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.95);
+    }
+    ::selection { background: #a2e8f1; color: #04141f; }
+    html { scrollbar-color: rgba(255, 255, 255, 0.35) transparent; }
+    @media (prefers-reduced-transparency: reduce) {
+      .backdrop-blur-md, .backdrop-blur-sm { -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
+    }
+    .card-shadow { box-shadow: 0 1px 0 rgba(255, 255, 255, 0.7) inset, 0 30px 60px -20px rgba(0, 0, 0, 0.45), 0 12px 24px -12px rgba(0, 0, 0, 0.30); }
     body.water-bg { transition: padding .3s ease; }
     body.water-bg.adv-compact { padding-top: .75rem; padding-bottom: 1rem; }
   </style>
@@ -174,7 +182,7 @@
     // --- SHARED UI PIECES ---
     const FieldLabel = ({ icon, iconClass = '', tight = false, children }) => (
       <span className={`flex items-center gap-1.5 text-[12px] font-semibold text-abyss-800/70 transition-all duration-300 ${tight ? 'mb-1' : 'mb-2'}`}>
-        <span className={`material-symbols-rounded text-[16px] ${iconClass}`}>{icon}</span>
+        <span aria-hidden="true" className={`material-symbols-rounded text-[16px] ${iconClass}`}>{icon}</span>
         {children}
       </span>
     );
@@ -193,9 +201,9 @@
                 aria-label={label}
                 value={value}
                 onChange={(e) => onChange(e.target.value === '' ? '' : Number(e.target.value))}
-                className={`field w-full h-full ${compact ? 'min-h-[42px]' : 'min-h-[52px]'} transition-all duration-300 rounded-xl border border-transparent bg-transparent text-center font-mono tabular text-[26px] font-bold tracking-tight ${error ? 'text-rose-700' : 'text-abyss-900'}`}
+                className={`field w-full h-full ${compact ? 'min-h-[44px]' : 'min-h-[52px]'} transition-all duration-300 rounded-xl border border-transparent bg-transparent text-center font-mono tabular text-[26px] font-bold tracking-tight ${error ? 'text-rose-700' : 'text-abyss-900'}`}
               />
-              <span className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-[11px] font-semibold text-abyss-800/40">{unit}</span>
+              <span className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-[12px] font-semibold text-abyss-800/70">{unit}</span>
             </div>
             <button type="button" aria-label={`Increase ${label} by ${step}`} onClick={() => onChange((Number(value) || 0) + step)} className={stepBtn}>+{step}</button>
           </div>
@@ -203,9 +211,28 @@
       );
     };
 
-    const ModalShell = ({ onClose, title, subtitle, maxWidth = 'max-w-md', children }) => (
+    const ModalShell = ({ onClose, title, subtitle, maxWidth = 'max-w-md', children }) => {
+      const dialogRef = React.useRef(null);
+      // Move focus into the dialog, keep Tab inside it, and give focus back on close
+      useEffect(() => {
+        const opener = document.activeElement;
+        const focusables = () => [...dialogRef.current.querySelectorAll('button, [href], input, select, [tabindex]:not([tabindex="-1"])')].filter(el => !el.disabled);
+        const first = focusables()[0];
+        if (first) first.focus();
+        const trap = (e) => {
+          if (e.key !== 'Tab' || !dialogRef.current) return;
+          const f = focusables();
+          if (!f.length) return;
+          const a = f[0], z = f[f.length - 1];
+          if (e.shiftKey && document.activeElement === a) { e.preventDefault(); z.focus(); }
+          else if (!e.shiftKey && document.activeElement === z) { e.preventDefault(); a.focus(); }
+        };
+        document.addEventListener('keydown', trap);
+        return () => { document.removeEventListener('keydown', trap); if (opener && opener.focus) opener.focus(); };
+      }, []);
+      return (
       <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-3 sm:p-4 bg-abyss-950/60 backdrop-blur-sm fade-in" onClick={onClose}>
-        <div role="dialog" aria-modal="true" aria-label={title} onClick={(e) => e.stopPropagation()} className={`w-full ${maxWidth} bg-white rounded-[28px] p-5 sm:p-6 card-shadow pop-in max-h-[88dvh] flex flex-col`}>
+        <div ref={dialogRef} role="dialog" aria-modal="true" aria-label={title} onClick={(e) => e.stopPropagation()} className={`w-full ${maxWidth} bg-white rounded-[28px] p-5 sm:p-6 card-shadow pop-in max-h-[88dvh] flex flex-col`}>
           <div className="w-full flex justify-between items-start mb-4">
             <div className="flex flex-col">
               <h3 className="font-display text-[22px] font-bold text-abyss-900 leading-none tracking-tight">{title}</h3>
@@ -214,15 +241,16 @@
             <button
               onClick={onClose}
               aria-label="Close"
-              className="w-9 h-9 flex items-center justify-center text-abyss-800/60 hover:text-abyss-900 bg-abyss-900/[0.05] hover:bg-abyss-900/[0.09] rounded-full active:scale-95 transition-all"
+              className="w-11 h-11 -mt-1 -mr-1 flex items-center justify-center text-abyss-800/70 hover:text-abyss-900 bg-abyss-900/[0.05] hover:bg-abyss-900/[0.09] rounded-full active:scale-95 transition-all"
             >
-              <span className="material-symbols-rounded text-[20px] block">close</span>
+              <span aria-hidden="true" className="material-symbols-rounded text-[20px] block">close</span>
             </button>
           </div>
           {children}
         </div>
       </div>
-    );
+      );
+    };
 
     // --- SUPPORT FOOTER COMPONENT ---
     const SupportFooter = () => {
@@ -232,9 +260,9 @@
             href="https://github.com/benk7557/Tank-Buddy"
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-full text-white/90 text-sm font-semibold bg-white/10 hover:bg-white/20 border border-white/20 backdrop-blur-md active:scale-95 transition-all"
+            className="flex items-center justify-center gap-2 px-5 min-h-[44px] rounded-full text-white/90 text-sm font-semibold bg-white/10 hover:bg-white/20 border border-white/20 backdrop-blur-md active:scale-95 transition-all"
           >
-            <span className="material-symbols-rounded text-[18px]">code</span>
+            <span aria-hidden="true" className="material-symbols-rounded text-[18px]">code</span>
             View on GitHub
           </a>
         </div>
@@ -261,9 +289,9 @@
             aria-controls="why-sac-panel"
             className="w-full flex items-center gap-3 px-4 py-3 rounded-full text-white/90 text-sm font-semibold bg-white/10 hover:bg-white/20 border border-white/20 backdrop-blur-md active:scale-[0.98] transition-all"
           >
-            <span className="material-symbols-rounded text-[20px]">help</span>
+            <span aria-hidden="true" className="material-symbols-rounded text-[20px]">help</span>
             <span className="flex-1 text-left">Why your SAC matters</span>
-            <span className={`material-symbols-rounded text-[22px] transition-transform duration-300 ${open ? 'rotate-180' : ''}`}>expand_more</span>
+            <span aria-hidden="true" className={`material-symbols-rounded text-[22px] transition-transform duration-300 ${open ? 'rotate-180' : ''}`}>expand_more</span>
           </button>
           <div
             id="why-sac-panel"
@@ -287,7 +315,7 @@
                   ))}
                 </ul>
                 <div className="mt-4 rounded-2xl bg-white border border-abyss-900/10 p-3.5">
-                  <p className="text-[12px] font-semibold uppercase tracking-wide text-abyss-800/60 mb-2">Quick example</p>
+                  <p className="text-[13px] font-semibold text-abyss-800/70 mb-2">Quick example</p>
                   <div className="font-mono text-[13px] tabular-nums space-y-1">
                     <div>15 L/min x 3 bar (20 m) = <span className="font-semibold">45 L/min</span></div>
                     <div>11 L x 200 bar = <span className="font-semibold">2,200 L</span></div>
@@ -454,7 +482,7 @@
         }
       };
 
-      const pUnit = isMetric ? "Bar" : "PSI";
+      const pUnit = isMetric ? "bar" : "psi";
       const dUnit = isMetric ? "m" : "ft";
       const outUnit = isMetric ? "L/min" : "cu ft/min";
       const stepSize = isMetric ? 10 : 100;
@@ -462,8 +490,8 @@
       const isDeepDive = avgDepth > depthWarningThreshold;
       const isPressureError = (startPressure !== '' && endPressure !== '' && Number(endPressure) >= Number(startPressure));
 
-      const selectClass = "field w-full rounded-xl border border-abyss-900/10 bg-white text-abyss-900 font-semibold px-3 py-2.5 text-sm";
-      const smallInputClass = "field w-full rounded-xl border border-abyss-900/10 bg-white text-abyss-900 font-mono tabular px-2.5 py-2 text-sm placeholder:text-abyss-800/35";
+      const selectClass = "field w-full rounded-xl border border-abyss-900/10 bg-white text-abyss-900 font-semibold px-3 py-2.5 text-base min-h-[44px]";
+      const smallInputClass = "field w-full rounded-xl border border-abyss-900/10 bg-white text-abyss-900 font-mono tabular px-2.5 py-2 text-base min-h-[44px] placeholder:text-abyss-800/70";
 
       const renderCalculationDetails = () => {
         if (!showCalc || !sacRate) return null;
@@ -489,14 +517,14 @@
 
       const renderOutput = () => {
         if (isPressureError) return (
-          <div className="rounded-3xl bg-abyss-900 px-5 py-7 text-center">
-            <span className="material-symbols-rounded text-rose-300 text-[28px] block mb-1">error</span>
+          <div role="alert" className="rounded-3xl bg-abyss-900 px-5 py-7 text-center">
+            <span aria-hidden="true" className="material-symbols-rounded text-rose-300 text-[28px] block mb-1">error</span>
             <p className="text-rose-200 font-semibold text-sm">Fix the pressure values to calculate.</p>
           </div>
         );
         if (!sacRate) return (
           <div className="rounded-3xl bg-abyss-900 px-5 py-7 text-center">
-            <span className="material-symbols-rounded text-reef-400/70 text-[28px] block mb-1">scuba_diving</span>
+            <span aria-hidden="true" className="material-symbols-rounded text-reef-400/70 text-[28px] block mb-1">scuba_diving</span>
             <p className="text-reef-100/70 text-sm">Enter your dive details to calculate.</p>
           </div>
         );
@@ -508,25 +536,30 @@
             <div className="pointer-events-none absolute inset-0 rounded-3xl bg-[radial-gradient(80%_60%_at_50%_0%,rgba(0,168,204,0.28),transparent_70%)]"></div>
             <div className={`relative flex items-center justify-between transition-all duration-300 ${isAdvanced ? 'mb-1' : 'mb-3'}`}>
               <h3 className="text-[12px] font-semibold text-reef-200/80">Surface air consumption</h3>
-              <button
-                onClick={() => setShowInfo(!showInfo)}
-                aria-label="Copying instructions"
-                className="w-8 h-8 flex items-center justify-center rounded-full bg-white/10 text-reef-100/80 hover:text-white hover:bg-white/20 transition-colors relative"
-              >
-                <span className="material-symbols-rounded text-[18px] block">info</span>
+              <div className="relative">
+                <button
+                  onClick={() => setShowInfo(!showInfo)}
+                  aria-label="Copying instructions"
+                  aria-expanded={showInfo}
+                  className="w-11 h-11 -my-2 -mr-2 flex items-center justify-center rounded-full text-reef-100/80 hover:text-white transition-colors"
+                >
+                  <span className="w-8 h-8 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-colors">
+                    <span aria-hidden="true" className="material-symbols-rounded text-[18px] block">info</span>
+                  </span>
+                </button>
                 {showInfo && (
-                  <div className="absolute bottom-full right-0 mb-3 w-64 p-3.5 bg-white text-abyss-900 text-xs rounded-2xl card-shadow z-50 font-sans text-left pop-in">
+                  <div role="status" className="absolute bottom-full right-0 mb-3 w-64 p-3.5 bg-white text-abyss-900 text-xs rounded-2xl card-shadow z-50 font-sans text-left pop-in">
                     <div className="flex justify-between items-start mb-1.5">
                       <p className="font-bold text-emerald-700">Copying instructions</p>
-                      <span onClick={(e) => { e.stopPropagation(); setShowInfo(false); }} className="text-abyss-800/40 hover:text-abyss-900 transition-colors cursor-pointer">
-                        <span className="material-symbols-rounded text-sm block">close</span>
-                      </span>
+                      <button type="button" onClick={() => setShowInfo(false)} aria-label="Close instructions" className="-m-2 w-11 h-11 flex items-center justify-center text-abyss-800/70 hover:text-abyss-900 transition-colors">
+                        <span aria-hidden="true" className="material-symbols-rounded text-base block">close</span>
+                      </button>
                     </div>
                     <p className="text-abyss-800/80 leading-relaxed font-medium">The SAC is usually logged without the decimals. Tap the green box once to copy the whole number.</p>
                     <div className="absolute top-full right-3 -mt-[1px] border-8 border-transparent border-t-white"></div>
                   </div>
                 )}
-              </button>
+              </div>
             </div>
 
             <div className="relative flex items-end justify-center gap-3">
@@ -534,9 +567,10 @@
               <button
                 onClick={() => handleCopy(intPart)}
                 className={`flex items-center gap-2.5 rounded-2xl px-5 ${isAdvanced ? 'py-1.5' : 'py-3'} border-2 transition-all active:scale-[0.97] ${copied ? 'bg-emerald-400 border-emerald-300 text-abyss-950' : 'bg-emerald-400/10 border-emerald-400/70 text-emerald-300 hover:bg-emerald-400/20'}`}
-                title="Click to copy whole number"
+                title="Copy whole number"
+                aria-label={`Copy ${intPart} to clipboard`}
               >
-                <span className="material-symbols-rounded text-[22px]">{copied ? 'check' : 'content_copy'}</span>
+                <span aria-hidden="true" className="material-symbols-rounded text-[22px]">{copied ? 'check' : 'content_copy'}</span>
                 <span className={`font-mono tabular leading-none ${isAdvanced ? 'text-[44px]' : 'text-[56px]'} font-extrabold tracking-tighter transition-all duration-300`}>{intPart}</span>
               </button>
               <div className="flex flex-col pb-2 font-mono tabular">
@@ -547,20 +581,20 @@
 
             <div className={`relative text-[13px] transition-all duration-300 ${isAdvanced ? 'h-4 mt-1' : 'h-5 mt-2.5'} flex items-center justify-center`} aria-live="polite">
               {copied && <span className="text-emerald-300 font-semibold fade-in">Copied to clipboard</span>}
-              {!copied && saved && <span className="text-reef-200 font-semibold fade-in">Dive logged</span>}
+              {!copied && saved && <span className="sr-only">Dive saved to history</span>}
             </div>
 
             <button
               onClick={handleSaveDive}
               disabled={!sacRate}
-              className={`relative mt-2 w-full ${isAdvanced ? 'py-3' : 'py-3.5'} rounded-2xl font-bold flex items-center justify-center gap-2 bg-reef-500 text-white hover:bg-reef-400 active:scale-[0.98] transition-all shadow-[0_8px_18px_-10px_rgba(2,30,48,0.6)]`}
+              className={`relative mt-2 w-full ${isAdvanced ? 'py-3' : 'py-3.5'} rounded-2xl font-bold flex items-center justify-center gap-2 bg-reef-500 text-abyss-950 hover:bg-reef-400 active:scale-[0.98] transition-all shadow-[0_8px_18px_-10px_rgba(0,0,0,0.5)]`}
             >
-              <span className="material-symbols-rounded text-[20px]">{saved ? 'check_circle' : 'bookmark_add'}</span>
+              <span aria-hidden="true" className="material-symbols-rounded text-[20px]">{saved ? 'check_circle' : 'bookmark_add'}</span>
               {saved ? 'Saved to history' : 'Log this dive'}
             </button>
 
-            <label className={`relative ${isAdvanced ? 'mt-2' : 'mt-3'} flex items-center justify-center gap-2 text-reef-100/70 text-xs cursor-pointer hover:text-white transition-colors`}>
-              <input type="checkbox" checked={showCalc} onChange={(e) => setShowCalc(e.target.checked)} className="h-3.5 w-3.5 rounded accent-[#00a8cc]" />
+            <label className={`relative ${isAdvanced ? 'mt-1' : 'mt-2'} min-h-[44px] flex items-center justify-center gap-2 text-reef-100/80 text-[13px] cursor-pointer hover:text-white transition-colors`}>
+              <input type="checkbox" checked={showCalc} onChange={(e) => setShowCalc(e.target.checked)} className="h-4 w-4 rounded accent-[#00a8cc]" />
               <span>Show the math</span>
             </label>
             {renderCalculationDetails()}
@@ -579,18 +613,18 @@
               </div>
               <div className="flex flex-col">
                 <h1 className={`font-display font-bold text-white tracking-tight leading-none drop-shadow-sm transition-all duration-300 ${isAdvanced ? 'text-[20px]' : 'text-[28px]'}`}>Tank Buddy</h1>
-                <p className={`text-[13px] font-medium text-white/75 overflow-hidden transition-all duration-300 ${isAdvanced ? 'max-h-0 opacity-0 mt-0' : 'max-h-5 opacity-100 mt-1'}`}>Dive SAC calculator</p>
+                <p className={`text-[13px] font-medium text-white/95 [text-shadow:0_1px_2px_rgba(0,0,0,0.35)] overflow-hidden transition-all duration-300 ${isAdvanced ? 'max-h-0 opacity-0 mt-0' : 'max-h-5 opacity-100 mt-1'}`}>Dive SAC calculator</p>
               </div>
             </div>
             <div className="flex gap-2">
               <button
                 onClick={() => setShowHistory(true)}
                 aria-label="Dive history"
-                className={`relative flex items-center justify-center rounded-full transition-all duration-300 ${isAdvanced ? 'w-9 h-9' : 'w-11 h-11'} bg-white/15 hover:bg-white/25 border border-white/25 text-white backdrop-blur-md active:scale-95`}
+                className={`relative flex items-center justify-center rounded-full transition-all duration-300 w-11 h-11 bg-white/15 hover:bg-white/25 border border-white/25 text-white backdrop-blur-md active:scale-95`}
               >
-                <span className="material-symbols-rounded text-[22px]">history</span>
+                <span aria-hidden="true" className="material-symbols-rounded text-[22px]">history</span>
                 {diveLogs.length > 0 && (
-                  <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 bg-white text-abyss-900 text-[10px] font-extrabold rounded-full flex items-center justify-center tabular shadow">
+                  <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 bg-white text-abyss-900 text-[11px] font-extrabold rounded-full flex items-center justify-center tabular shadow">
                     {diveLogs.length}
                   </span>
                 )}
@@ -598,9 +632,9 @@
               <button
                 onClick={() => setShowShare(true)}
                 aria-label="Share Tank Buddy"
-                className={`flex items-center justify-center rounded-full transition-all duration-300 ${isAdvanced ? 'w-9 h-9' : 'w-11 h-11'} bg-white/15 hover:bg-white/25 border border-white/25 text-white backdrop-blur-md active:scale-95`}
+                className={`flex items-center justify-center rounded-full transition-all duration-300 w-11 h-11 bg-white/15 hover:bg-white/25 border border-white/25 text-white backdrop-blur-md active:scale-95`}
               >
-                <span className="material-symbols-rounded text-[22px]">ios_share</span>
+                <span aria-hidden="true" className="material-symbols-rounded text-[22px]">ios_share</span>
               </button>
             </div>
           </header>
@@ -610,15 +644,15 @@
             {/* ADVANCED TOGGLE */}
             <label className={`flex items-center justify-between gap-3 px-3.5 rounded-2xl border cursor-pointer select-none transition-all duration-300 ${isAdvanced ? 'py-2 mb-3 bg-reef-500 border-reef-600' : 'py-3 mb-4 bg-white border-abyss-900/10'}`}>
               <span className="flex items-center gap-2.5">
-                <span className={`w-9 h-9 rounded-xl flex items-center justify-center transition-colors duration-300 ${isAdvanced ? 'bg-white/20 text-white' : 'bg-reef-50 text-reef-700'}`}>
-                  <span className="material-symbols-rounded text-[20px]">tune</span>
+                <span className={`w-9 h-9 rounded-xl flex items-center justify-center transition-colors duration-300 ${isAdvanced ? 'bg-abyss-950/15 text-abyss-950' : 'bg-reef-50 text-reef-700'}`}>
+                  <span aria-hidden="true" className="material-symbols-rounded text-[20px]">tune</span>
                 </span>
                 <span className="flex flex-col">
-                  <span className={`font-display text-[16px] font-semibold leading-tight transition-colors duration-300 ${isAdvanced ? 'text-white' : 'text-abyss-900'}`}>Advanced diver</span>
-                  <span className={`text-[12px] overflow-hidden transition-all duration-300 ${isAdvanced ? 'max-h-0 opacity-0 text-white/80' : 'max-h-5 opacity-100 text-abyss-800/55'}`}>Twinsets, tank size and custom volumes</span>
+                  <span className={`font-display text-[16px] font-semibold leading-tight transition-colors duration-300 ${isAdvanced ? 'text-abyss-950' : 'text-abyss-900'}`}>Advanced diver</span>
+                  <span className={`text-[12px] overflow-hidden transition-all duration-300 ${isAdvanced ? 'max-h-0 opacity-0' : 'max-h-5 opacity-100 text-abyss-800/70'}`}>Twinsets, tank size and custom volumes</span>
                 </span>
               </span>
-              <input type="checkbox" checked={isAdvanced} onChange={(e) => setIsAdvanced(e.target.checked)} className="sr-only" />
+              <input type="checkbox" role="switch" checked={isAdvanced} onChange={(e) => setIsAdvanced(e.target.checked)} className="sr-only" />
               <span className={`relative w-12 h-7 shrink-0 rounded-full transition-colors duration-200 ${isAdvanced ? 'bg-abyss-900' : 'bg-abyss-900/15'}`}>
                 <span className={`absolute left-0.5 top-0.5 w-6 h-6 bg-white rounded-full shadow transition-transform duration-200 ${isAdvanced ? 'translate-x-5' : ''}`}></span>
               </span>
@@ -665,8 +699,8 @@
               <div>
                 <Stepper label="End pressure" icon="speed" iconClass="text-rose-500" value={endPressure} onChange={setEndPressure} step={stepSize} unit={pUnit} error={isPressureError} compact={isAdvanced} />
                 {isPressureError && (
-                  <p className="flex items-center gap-1 text-[12px] text-rose-600 mt-1.5 font-semibold pl-1">
-                    <span className="material-symbols-rounded text-[15px]">warning</span>
+                  <p className="flex items-center gap-1 text-[12px] text-rose-700 mt-1.5 font-semibold pl-1">
+                    <span aria-hidden="true" className="material-symbols-rounded text-[15px]">warning</span>
                     End pressure must be lower than start
                   </p>
                 )}
@@ -676,20 +710,20 @@
                 <label className={`block rounded-2xl border transition-all duration-300 ${isAdvanced ? 'px-3 py-2' : 'p-3'} ${isDeepDive ? 'bg-amber-50 border-amber-300' : 'bg-white border-abyss-900/10'}`}>
                   <FieldLabel icon="waves" iconClass="text-reef-600" tight={isAdvanced}>Avg depth</FieldLabel>
                   <div className="flex items-baseline gap-1">
-                    <input type="number" inputMode="decimal" value={avgDepth} onChange={(e) => setAvgDepth(e.target.value === '' ? '' : Number(e.target.value))} className={`field w-full min-w-0 rounded-lg border border-transparent bg-transparent font-mono tabular text-[26px] font-bold tracking-tight px-1 ${isDeepDive ? 'text-amber-900' : 'text-abyss-900'}`} />
-                    <span className="text-[13px] font-semibold text-abyss-800/45">{dUnit}</span>
+                    <input type="number" inputMode="decimal" value={avgDepth} onChange={(e) => setAvgDepth(e.target.value === '' ? '' : Number(e.target.value))} className={`field w-full min-w-0 rounded-lg border border-transparent bg-transparent font-mono tabular text-[26px] font-bold tracking-tight px-1 min-h-[44px] ${isDeepDive ? 'text-amber-900' : 'text-abyss-900'}`} />
+                    <span className="text-[13px] font-semibold text-abyss-800/70">{dUnit}</span>
                   </div>
                   {isDeepDive && (
-                    <p className="flex items-center gap-1 text-[11px] text-amber-700 mt-1 font-bold">
-                      <span className="material-symbols-rounded text-[14px]">warning</span> Deep profile
+                    <p className="flex items-center gap-1 text-[12px] text-amber-700 mt-1 font-bold">
+                      <span aria-hidden="true" className="material-symbols-rounded text-[14px]">warning</span> Deep profile
                     </p>
                   )}
                 </label>
                 <label className={`block rounded-2xl border border-abyss-900/10 bg-white transition-all duration-300 ${isAdvanced ? 'px-3 py-2' : 'p-3'}`}>
                   <FieldLabel icon="timer" iconClass="text-reef-600" tight={isAdvanced}>Bottom time</FieldLabel>
                   <div className="flex items-baseline gap-1">
-                    <input type="number" inputMode="numeric" value={diveTime} onChange={(e) => setDiveTime(e.target.value === '' ? '' : Number(e.target.value))} className="field w-full min-w-0 rounded-lg border border-transparent bg-transparent font-mono tabular text-[26px] font-bold tracking-tight text-abyss-900 px-1" />
-                    <span className="text-[13px] font-semibold text-abyss-800/45">min</span>
+                    <input type="number" inputMode="numeric" value={diveTime} onChange={(e) => setDiveTime(e.target.value === '' ? '' : Number(e.target.value))} className="field w-full min-w-0 rounded-lg border border-transparent bg-transparent font-mono tabular text-[26px] font-bold tracking-tight text-abyss-900 px-1 min-h-[44px]" />
+                    <span className="text-[13px] font-semibold text-abyss-800/70">min</span>
                   </div>
                 </label>
               </div>
@@ -708,7 +742,7 @@
             <p className="text-[12px] text-white/85 font-medium mb-1.5">
               Built by Ben Kaufman <span className="mx-1 opacity-50">•</span> Made with AI
             </p>
-            <p className="text-[11px] text-white/55 leading-relaxed max-w-xs mx-auto" style={{ textWrap: 'pretty' }}>
+            <p className="text-[12px] text-white/70 leading-relaxed max-w-xs mx-auto" style={{ textWrap: 'pretty' }}>
               Disclaimer: This tool is for informational purposes only. Always independently verify calculations and finalize dive plans before entering the water.
             </p>
           </footer>
@@ -723,9 +757,9 @@
               <div className="flex-1 overflow-y-auto space-y-2.5 mb-4 -mx-1 px-1">
                 {diveLogs.length === 0 ? (
                   <div className="text-center py-12 px-6 rounded-2xl bg-reef-50/60 border border-dashed border-reef-200">
-                    <span className="material-symbols-rounded text-5xl text-reef-400 block mb-3">scuba_diving</span>
+                    <span aria-hidden="true" className="material-symbols-rounded text-5xl text-reef-400 block mb-3">scuba_diving</span>
                     <p className="font-display text-abyss-900 font-semibold text-lg">No dives logged yet</p>
-                    <p className="text-[13px] text-abyss-800/60 mt-1">Calculate a SAC rate, then tap "Log this dive".</p>
+                    <p className="text-[13px] text-abyss-800/70 mt-1">Calculate a SAC rate, then tap "Log this dive".</p>
                   </div>
                 ) : (
                   diveLogs.map((log) => {
@@ -740,19 +774,19 @@
                       <div key={log.id} className="rounded-2xl p-3.5 bg-[#f6fbfd] border border-abyss-900/[0.08]">
                         <div className="flex justify-between items-start">
                           <div>
-                            <p className="font-mono tabular text-[26px] font-extrabold text-abyss-900 leading-none tracking-tight">{log.sacRate} <span className="font-sans text-[12px] font-semibold text-abyss-800/50 tracking-normal">{sacUnit}</span></p>
-                            <p className="text-[12px] text-abyss-800/55 font-medium mt-1.5">{dateStr} · {timeStr}</p>
+                            <p className="font-mono tabular text-[26px] font-extrabold text-abyss-900 leading-none tracking-tight">{log.sacRate} <span className="font-sans text-[12px] font-semibold text-abyss-800/70 tracking-normal">{sacUnit}</span></p>
+                            <p className="text-[12px] text-abyss-800/70 font-medium mt-1.5">{dateStr} · {timeStr}</p>
                           </div>
                           <button
                             onClick={() => handleDeleteLog(log.id)}
-                            className="w-9 h-9 flex items-center justify-center text-abyss-800/40 hover:text-rose-600 hover:bg-rose-50 rounded-full active:scale-95 transition-all"
+                            className="w-11 h-11 -mt-1.5 -mr-1.5 flex items-center justify-center text-abyss-800/70 hover:text-rose-700 hover:bg-rose-50 rounded-full active:scale-95 transition-all"
                             title="Delete log"
                             aria-label="Delete log"
                           >
-                            <span className="material-symbols-rounded text-[19px] block">delete</span>
+                            <span aria-hidden="true" className="material-symbols-rounded text-[19px] block">delete</span>
                           </button>
                         </div>
-                        <dl className="grid grid-cols-2 gap-1.5 text-[11px] mt-3">
+                        <dl className="grid grid-cols-2 gap-1.5 text-[12px] mt-3">
                           {[
                             ['Depth', `${log.avgDepth} ${dUnit}`],
                             ['Time', `${log.diveTime} min`],
@@ -760,7 +794,7 @@
                             ['Tank', `${log.tanks}× ${log.tankVolume}${log.isMetric ? 'L' : 'cf'}`],
                           ].map(([k, v]) => (
                             <div key={k} className="bg-white rounded-xl px-2.5 py-1.5 border border-abyss-900/[0.06]">
-                              <dt className="text-abyss-800/50 font-semibold">{k}</dt>
+                              <dt className="text-abyss-800/70 font-semibold">{k}</dt>
                               <dd className="text-abyss-900 font-bold font-mono tabular mt-0.5 truncate">{v}</dd>
                             </div>
                           ))}
@@ -774,7 +808,7 @@
               {diveLogs.length > 0 && (
                 <button
                   onClick={handleClearAll}
-                  className="w-full py-3 text-rose-600 hover:bg-rose-50 rounded-2xl font-bold text-sm active:scale-[0.98] transition-all border border-rose-200"
+                  className="w-full py-3 text-rose-700 hover:bg-rose-50 rounded-2xl font-bold text-sm active:scale-[0.98] transition-all border border-rose-200"
                 >
                   Clear all history
                 </button>
@@ -789,7 +823,7 @@
                 <div className="rounded-3xl bg-white border border-abyss-900/10 card-shadow mb-5 mt-1 w-56 h-56 flex items-center justify-center overflow-hidden p-2">
                   <img src="/qr.svg" alt="QR code linking to tankbuddy.net" className="w-full h-full object-contain" />
                 </div>
-                <p className="text-[13px] text-abyss-800/60 text-center mb-4">Have your buddy scan the code, or send the link.</p>
+                <p className="text-[13px] text-abyss-800/70 text-center mb-4">Have your buddy scan the code, or send the link.</p>
 
                 <button
                   onClick={async () => {
@@ -807,9 +841,9 @@
                       alert("Native sharing isn't supported on this browser. Have your buddy scan the QR code instead!");
                     }
                   }}
-                  className="w-full py-3.5 bg-reef-500 text-white rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-reef-600 active:scale-[0.98] transition-all shadow-[0_8px_18px_-10px_rgba(2,30,48,0.6)]"
+                  className="w-full py-3.5 bg-reef-500 text-abyss-950 rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-reef-600 active:scale-[0.98] transition-all shadow-[0_8px_18px_-10px_rgba(0,0,0,0.5)]"
                 >
-                  <span className="material-symbols-rounded text-[20px]">send</span>
+                  <span aria-hidden="true" className="material-symbols-rounded text-[20px]">send</span>
                   Send link
                 </button>
               </div>
