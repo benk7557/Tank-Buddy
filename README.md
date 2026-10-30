@@ -97,6 +97,10 @@ docs/           README assets
 
 There are no accounts and no tracking cookies. Your dive logs never leave your browser. The site uses Cloudflare Web Analytics, which is cookieless and collects aggregate page views only.
 
+## License
+
+[MIT](LICENSE) © 2026 Ben Kaufman
+
 ## Disclaimer
 
 Tank Buddy is for informational purposes only. It is not a dive computer or a substitute for proper training and dive planning. Always verify calculations independently and finalise your dive plan with your buddy before entering the water.
